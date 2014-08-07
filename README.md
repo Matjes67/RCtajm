@@ -1,4 +1,5 @@
 RCtajm
 ======
 
-RC Tajm
+RC Tajm (pronounced rc time)
+
