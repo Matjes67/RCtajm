@@ -25,4 +25,5 @@ Download and install arch linux to a sd card. follow guide on raspberrys homepag
 * cd RCtajm/alpha0
 * ln -s /usr/bin/python2 /usr/bin/python
 * npm install
-* 
+* DEBUG=alpha0 ./bin/www
+
