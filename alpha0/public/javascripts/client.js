@@ -1,28 +1,20 @@
-(function() {
+console.log("hello world");
+
+//(function() {
 	var getNode = function(s) {
 		return document.querySelector(s);
-	},
+	};
 	
 	// get nodes
-	status = getNode(".chat-status span"),
-	messages = getNode(".chat-messages"),
-	textarea = getNode(".chat textarea"),
-	chatName = getNode(".chat-name");
+	var cartable = getNode(".car-table");
+	var status = getNode(".chat-status span");
+	var messages = getNode(".car-laps tbody");
+	var textarea = getNode(".chat textarea");
+	var chatName = getNode(".chat-name");
 
-	statusDefault = status.textContent, 
+	//statusDefault = status.textContent; 
 
-	setStatus = function(s) {
-		status.textContent = s;
-
-		if(s !== statusDefault) {
-			var delay = setTimeout(function() {
-				setStatus(statusDefault);
-			},3000);
-		}
-	};
-
-	setStatus("testing");
-
+	
 	try {
 		var socket = io.connect("http://localhost:8080");
 	} catch(e) {
@@ -33,44 +25,61 @@
 
 
 		//listen for output
-		socket.on("output", function(data) {
-			console.log("test");
+		socket.on("laptime", function(data) {
+			console.log("got laptime");
+			
+			//if(data.length) {
+				//loop throug results
+			//	for(var x = 0; x< data.length; x++) {
+					var tr = document.createElement("tr");
+					//message.setAttribute("class", "car-laps");
+					var th = document.createElement("th");
+					th.textContent = data.name;
+
+					tr.appendChild(th);
+
+					var td = document.createElement("td");
+					td.textContent = data.laptime;
+					tr.appendChild(td);
+					var td = document.createElement("td");
+					td.textContent = data.transponder;
+					tr.appendChild(td);
+					var td = document.createElement("td");
+					td.textContent = data.strength;
+					tr.appendChild(td);
+					var td = document.createElement("td");
+					td.textContent = data.hits;
+					tr.appendChild(td);
+
+
+					//message.textContent = "\n <th>" + data.name + "</th> \n <td>" + data.laptime + "</td> \n <td>" + data.transponder + "</td> \n <td>" + data.strength + "</td> \n <td>" + data.hits+"</td> \n ";//data[x].name + ": " + data[x].message;
+
+					// append
+					messages.appendChild(tr);
+					messages.insertBefore(tr, messages.firstChild);
+				//}
+			//}
+		});
+
+		socket.on("cartable", function(data) {
+			console.log("got cartable");
 			
 			//if(data.length) {
 				//loop throug results
 			//	for(var x = 0; x< data.length; x++) {
 					var message = document.createElement("div");
-					message.setAttribute("class", "chat-message");
+					message.setAttribute("class", "car-table");
 					message.textContent = data;//data[x].name + ": " + data[x].message;
 
+					cartable = message;
 					// append
-					messages.appendChild(message);
-					messages.insertBefore(message, messages.firstChild);
+					//cartable.appendChild(message);
+					//cartable.insertBefore(message, cartable.firstChild);
 				//}
 			//}
 		});
 
-		socket.on("status", function(data) {
-			setStatus((typeof data === "object") ? data.message : data );
-			if (data.clear === true) {
-				textarea.value = "";
-			}
-		});
-		// listen for keydown
-
-		textarea.addEventListener("keydown", function(event) {
-			var self = this,
-				name = chatName.value;
-			console.log(event.which);
-
-			if(event.which ===13 && event.shiftKey === false) {
-				console.log("send!");
-				socket.emit("input", {
-					name: name,
-					message: self.value
-				})
-			}
-		});
+		
 	}
 
-})();
+//})();

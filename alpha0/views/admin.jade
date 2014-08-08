@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  h1= title
+  p Admin page
+  div.car
+    
+    div.driver-table
+      table
+        caption Drivers
+        thead
+          tr
+            th Name
+            th transponder
+            
+        tbody
+        
+  div.add
+    input(type="text", class="driver-name", placeholder="Enter name here")
+    input(type="text", class="driver-trans", placeholder="Enter transponder number")
+
+    button(onclick='senddriver()') Add driver
+
+  
+  
+  script(src='http://localhost:8080/socket.io/socket.io.js')
+  script(src='/javascripts/clientadmin.js')

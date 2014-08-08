@@ -2,15 +2,36 @@ extends layout
 
 block content
   h1= title
-  p Welcome to #{title}
-  div.chat
-    input(type="text", class="chat-name", placeholder="Enter name here")
-    div.chat-messages
-    textarea(placeholder="type message")
-    div.chat-status 
-      | Status: 
-      span
-        | Idle
+  p Live times
+  div.car
+    div.car-table
+      table
+        caption Lap times
+        thead
+          tr
+            th col1
+            th col2
+            th col2
+            th col2
+        tbody
+          tr
+            th row1
+            td data1
+            td data2
+            td data3
+    div.car-laps
+      table
+        caption Lap times
+        thead
+          tr
+            th Name
+            th Laptime
+            th transponder
+            th hits
+            th str
+        tbody
+
+ 
   
   script(src='http://localhost:8080/socket.io/socket.io.js')
   script(src='/javascripts/client.js')
