@@ -139,34 +139,31 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                         colLaps.find({ name: name2 }, {'limit':1, 'sort':[[ 'lapTime', 'desc']]}).toArray(function(err, docs) {            
                             if (docs.length>0) {
                                 
-                                var lap = splitData[2] - docs[0].lapTime;
+                                var lap = (splitData[2] - docs[0].lapTime)/1000;
                                 var totallaps = docs[0].laps+1;
-                                console.log("Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap/1000);  
+                                console.log("Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap);  
                                 
-                                client.emit("laptime", {
-                                    name: name2,
-                                    laptime: lap/1000,
-                                    transponder: splitData[1],
-                                    strength: splitData[3],
-                                    hits: splitData[4]
-                                });
+                                
 				                
                                 //client.emit("laptime", "name: "+name2+" tran: "+splitData[1]+" laptime: "+lap/1000+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
                                 
 
                             } else {
                                 //console.log("no laps");
-                                client.emit("laptime", {
-                                    name: name2,
-                                    laptime: "first lap",
-                                    transponder: splitData[1],
-                                    strength: splitData[3],
-                                    hits: splitData[4]
-                                });
+                                lap = "first lap";
 				                totallaps = 0;
                                     //"name: "+name2+" tran: "+splitData[1]+" laptime: first lap"+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
                         
                             }
+                            client.emit("laptime", {
+                                    name: name2,
+                                    laptime: lap,
+                                    transponder: splitData[1],
+                                    strength: splitData[3],
+                                    hits: splitData[4],
+                                    laps: totallaps
+                            });
+
                             colLaps.insert({name: name2, 
                                          transponder: splitData[1],
                                              lapTime: parseInt(splitData[2]), 
@@ -181,6 +178,24 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                                 }
                             );
 
+                            var colRace = db.collection("currentrace");
+                            //console.log("racetableinsert");
+                            colRace.update({name: name2}, {  name: name2, totalTime:parseInt(splitData[2]), laps: parseInt(totallaps), lastLapTime: lap },{upsert: true},
+                                function(err,result) {
+                                    if (err) throw err;
+                                    //console.log("racetable result");
+                                }
+
+                            );
+                            colRace.find({}).sort({laps: -1, totalTime: 1}).toArray(function(err,res) {
+                            //colRace.find({}, {  "sort": [['laps','asc'], ['totalTime','desc']] }, function(err,result) {
+                                    if (err) throw err;
+                                    //console.log("cartable result"+res);
+                                    client.emit("cartable", res);
+                                }
+
+                            );
+                            
                             colDrivers.find({}).toArray (function(err,res) {
                                 //console.log(res);
                                 //console.log(res.transponders);

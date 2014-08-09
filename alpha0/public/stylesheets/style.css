@@ -1,5 +1,5 @@
 body {
-  padding: 50px;
+  padding: 5px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
@@ -9,6 +9,17 @@ a {
 .chat {
 	max-width: 300px;
 }
+
+table {
+	border:1px solid #fff;
+}
+td {
+	border:1px solid #bbb;
+}
+tr {
+	border:1px solid #fff;
+}
+
 
 .chat textarea, 
 .chat-messages,

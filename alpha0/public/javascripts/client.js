@@ -37,7 +37,9 @@ console.log("hello world");
 					th.textContent = data.name;
 
 					tr.appendChild(th);
-
+					var td = document.createElement("td");
+					td.textContent = data.laps;
+					tr.appendChild(td);
 					var td = document.createElement("td");
 					td.textContent = data.laptime;
 					tr.appendChild(td);
@@ -55,18 +57,25 @@ console.log("hello world");
 					//message.textContent = "\n <th>" + data.name + "</th> \n <td>" + data.laptime + "</td> \n <td>" + data.transponder + "</td> \n <td>" + data.strength + "</td> \n <td>" + data.hits+"</td> \n ";//data[x].name + ": " + data[x].message;
 
 					// append
-					messages.appendChild(tr);
-					messages.insertBefore(tr, messages.firstChild);
+					//messages.appendChild(tr);
+					//messages.insertBefore(tr, messages.firstChild);
 				//}
 			//}
 		});
 
 		socket.on("cartable", function(data) {
 			console.log(data);
-			messages.parentNode.removeChild(messages);
-			var drivertable = document.querySelector(".car-table table");
+			var driverbox = document.querySelector(".driver-table tbody");
+			driverbox.parentNode.removeChild(driverbox);
+			var drivertable = document.querySelector(".driver-table table");
 			drivertable.appendChild(document.createElement("tbody"));
-			messages = document.querySelector(".car-table tbody");
+			driverbox = document.querySelector(".driver-table tbody");
+			
+
+			//messages.parentNode.removeChild(messages);
+			//var drivertable = document.querySelector(".car-table table");
+			//drivertable.appendChild(document.createElement("tbody"));
+			//messages = document.querySelector(".car-table tbody");
 			if(data.length) {
 				//loop throug results
 				for(var x = 0; x< data.length; x++) {
@@ -77,28 +86,24 @@ console.log("hello world");
 
 					tr.appendChild(th);
 
-					for (var i=0;i<data[x].transponders.length;i++) {
+					
 						var td = document.createElement("td");
-						td.textContent = data[x].transponders[i];
+						td.textContent = data[x].laps;
 						tr.appendChild(td);
-					}
-					// Add more transponder input field and button
-					var td = document.createElement("td");
-					var textfield = document.createElement("input");
-					textfield.type = "text";
-					textfield.className = "in-"+data[x]._id;
-					td.appendChild(textfield);
-					tr.appendChild(td);
-					//button
-					var span = document.createElement('span');
-					span.innerHTML = '<input type=button value="Add number" onclick="buttonAddNumber(\''+data[x]._id+'\')" />';
 
-					td.appendChild(span);
-					tr.appendChild(td);
+						var td = document.createElement("td");
+						td.textContent = parseInt(data[x].totalTime)/1000;
+						tr.appendChild(td);
+
+						var td = document.createElement("td");
+						td.textContent = data[x].lastLapTime;
+						tr.appendChild(td);
+					
+					
 
 					
 					// append
-					messages.appendChild(tr);
+					driverbox.appendChild(tr);
 					//messages.insert(tr, messages.firstChild);
 				}
 			}
