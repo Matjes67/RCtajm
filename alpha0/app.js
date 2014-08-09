@@ -309,6 +309,12 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             if (data == "stop"){
                 serialPort.write("Quit");
             }
+            if (data == "clear"){
+                var colRace = db.collection("currentrace");
+                colRace.remove({}, function(err,res) {
+                    if (err) throw err;
+                });
+            }
                 
             
             

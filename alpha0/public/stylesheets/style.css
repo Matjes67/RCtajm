@@ -15,6 +15,11 @@ table {
 }
 td {
 	border:1px solid #bbb;
+	text-align: left;
+}
+th {
+	border:1px solid #bbb;
+	text-align: left;
 }
 tr {
 	border:1px solid #fff;

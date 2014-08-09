@@ -45,6 +45,10 @@ console.log("adminpage");
   		console.log("STOPracebutton");
     	socket.emit("racecommand", "stop");
   	}
+  	var clearRace = function() {
+  		console.log("CLEARracebutton");
+    	socket.emit("racecommand", "clear");
+  	}
 
 		//listen for output
 		socket.on("drivertable", function(data) {
