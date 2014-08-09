@@ -16,7 +16,7 @@ console.log("hello world");
 
 	
 	try {
-		var socket = io.connect("http://localhost:8080");
+		var socket = io.connect(window.location.hostname);
 	} catch(e) {
 		// error
 	}

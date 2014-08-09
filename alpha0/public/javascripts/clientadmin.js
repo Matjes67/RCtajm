@@ -8,7 +8,7 @@ console.log("adminpage");
 	var messages = document.querySelector(".driver-table tbody");
 
 	try {
-		var socket = io.connect("http://localhost:8080");
+		var socket = io.connect(window.location.hostname);
 	} catch(e) {
 		// error
 	}

@@ -4,15 +4,23 @@ var favicon = require('static-favicon');                // Express template
 var logger = require('morgan');                         // Express template
 var cookieParser = require('cookie-parser');            // Express template
 var bodyParser = require('body-parser');                // Express template
+var debug = require('debug')('alpha0');
 
 var routes = require('./routes/index');                 // Express template
 var users = require('./routes/users');                  // Express template
 var admin = require('./routes/admin');
 
-var app = express();                                    // Express template
+var io = require('socket.io');
 
-var mongo = require('mongodb').MongoClient,
-    client = require('socket.io').listen(8080).sockets;
+
+var app = express(),
+mongo = require('mongodb'),
+server = require('http').createServer(app).listen(8080),
+client = io.listen(server);
+
+
+//debug('Express server listening on port ' + server.address().port);
+
 var SerialPort = require("serialport").SerialPort;
 var sendData = "";
 var serialPort;
