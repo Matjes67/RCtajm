@@ -116,9 +116,9 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         serialPort.on('data', function(data) {
             receivedData += data.toString();
             
-            if (receivedData.indexOf('E') >= 0 && receivedData.indexOf('C') >= 0) {
+            if (receivedData.indexOf('\n') >= 0 && receivedData.indexOf('C') >= 0) {
                 
-                splitData2 = receivedData.substring(receivedData.indexOf('C'), receivedData.indexOf('E')+2);
+                splitData2 = receivedData.substring(receivedData.indexOf('C'), receivedData.indexOf('\n')+1);
                 console.log(splitData2);
                 splitData = splitData2.split(":");
                 console.log("."+receivedData);
@@ -177,7 +177,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                                     if (err) throw err;
 
                                     //console.log("inserted "+name2+" "+splitData[2]+" trying to clear:"+splitData2+" in:"+receivedData);
-                                    receivedData = receivedData.replace(splitData2+"\n","");
+                                    receivedData = receivedData.replace(splitData2,"");
                                 }
                             );
 
