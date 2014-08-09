@@ -1,9 +1,18 @@
 int counter = 0;
+boolean started = false;
+char inByte;
+int led = 13;
+
+
 void setup() {
   Serial.begin(9600);
+  pinMode(led, OUTPUT); 
 }
 
 void loop() {
+  
+  if (started) {
+    digitalWrite(led, HIGH);
   counter++;
   
   int car = analogRead(A0);
@@ -24,4 +33,18 @@ void loop() {
   
   Serial.println(":E");
   delay(2000);        // delay in between reads for stability
+  }
+  else {
+    digitalWrite(led, LOW);
+  }
+    if (Serial.available() > 0) {
+    // get incoming byte:
+    inByte = Serial.read();
+    if (inByte == 'S') {
+      started = true;
+    }
+    if (inByte == 'Q') {
+      started = false;
+    }
+    }
 }

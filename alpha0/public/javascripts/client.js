@@ -62,21 +62,46 @@ console.log("hello world");
 		});
 
 		socket.on("cartable", function(data) {
-			console.log("got cartable");
-			
-			//if(data.length) {
+			console.log(data);
+			messages.parentNode.removeChild(messages);
+			var drivertable = document.querySelector(".car-table table");
+			drivertable.appendChild(document.createElement("tbody"));
+			messages = document.querySelector(".car-table tbody");
+			if(data.length) {
 				//loop throug results
-			//	for(var x = 0; x< data.length; x++) {
-					var message = document.createElement("div");
-					message.setAttribute("class", "car-table");
-					message.textContent = data;//data[x].name + ": " + data[x].message;
+				for(var x = 0; x< data.length; x++) {
+					var tr = document.createElement("tr");
+					//message.setAttribute("class", "car-laps");
+					var th = document.createElement("th");
+					th.textContent = data[x].name;
 
-					cartable = message;
+					tr.appendChild(th);
+
+					for (var i=0;i<data[x].transponders.length;i++) {
+						var td = document.createElement("td");
+						td.textContent = data[x].transponders[i];
+						tr.appendChild(td);
+					}
+					// Add more transponder input field and button
+					var td = document.createElement("td");
+					var textfield = document.createElement("input");
+					textfield.type = "text";
+					textfield.className = "in-"+data[x]._id;
+					td.appendChild(textfield);
+					tr.appendChild(td);
+					//button
+					var span = document.createElement('span');
+					span.innerHTML = '<input type=button value="Add number" onclick="buttonAddNumber(\''+data[x]._id+'\')" />';
+
+					td.appendChild(span);
+					tr.appendChild(td);
+
+					
 					// append
-					//cartable.appendChild(message);
-					//cartable.insertBefore(message, cartable.firstChild);
-				//}
-			//}
+					messages.appendChild(tr);
+					//messages.insert(tr, messages.firstChild);
+				}
+			}
 		});
 
 		

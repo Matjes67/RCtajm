@@ -108,12 +108,15 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         serialPort.on('data', function(data) {
             receivedData += data.toString();
             
-            if (receivedData .indexOf('E') >= 0 && receivedData .indexOf('C') >= 0) {
-            
-                splitData = receivedData.split(":");
-                receivedData = "";
+            if (receivedData.indexOf('E') >= 0 && receivedData.indexOf('C') >= 0) {
                 
-                //console.log(splitData);
+                splitData2 = receivedData.substring(receivedData.indexOf('C'), receivedData.indexOf('E')+2);
+                console.log(splitData2);
+                splitData = splitData2.split(":");
+                console.log("."+receivedData);
+
+                //receivedData = "";
+                
                 if (splitData.length>4) {
                     var colDrivers = db.collection("drivers");
                     var name2 =  splitData[1];
@@ -129,8 +132,8 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                             if (docs.length>0) {
                                 
                                 var lap = splitData[2] - docs[0].lapTime;
-                                
-                                //console.log("Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap/1000);  
+                                var totallaps = docs[0].laps+1;
+                                console.log("Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap/1000);  
                                 
                                 client.emit("laptime", {
                                     name: name2,
@@ -139,7 +142,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                                     strength: splitData[3],
                                     hits: splitData[4]
                                 });
-
+				                
                                 //client.emit("laptime", "name: "+name2+" tran: "+splitData[1]+" laptime: "+lap/1000+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
                                 
 
@@ -152,9 +155,30 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                                     strength: splitData[3],
                                     hits: splitData[4]
                                 });
+				                totallaps = 0;
                                     //"name: "+name2+" tran: "+splitData[1]+" laptime: first lap"+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
                         
                             }
+                            colLaps.insert({name: name2, 
+                                         transponder: splitData[1],
+                                             lapTime: parseInt(splitData[2]), 
+                                            strength: parseInt(splitData[3]), 
+                                                hits: parseInt(splitData[4]),
+                                                laps: totallaps }, 
+                                function(err,result) {
+                                    if (err) throw err;
+
+                                    //console.log("inserted "+name2+" "+splitData[2]+" trying to clear:"+splitData2+" in:"+receivedData);
+                                    receivedData = receivedData.replace(splitData2+"\n","");
+                                }
+                            );
+
+                            colDrivers.find({}).toArray (function(err,res) {
+                                //console.log(res);
+                                //console.log(res.transponders);
+                            })
+
+                            //client.emit("cartable", "banan")
                         });
                             
                             //var laptime = splitData - document.lapTime
@@ -164,10 +188,10 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                         
 
                         var colLaps = db.collection("laptimes");
-                        colLaps.insert({name: name2, lapTime: parseInt(splitData[2]), strength: parseInt(splitData[3]), hits: parseInt(splitData[4]) }, function(err,result) {
-                            if (err) throw err;
-                            console.log("inserted "+name2+" "+splitData[2]);
-                        });
+                        //colLaps.insert({name: name2, lapTime: parseInt(splitData[2]), strength: parseInt(splitData[3]), hits: parseInt(splitData[4]) }, function(err,result) {
+                        //    if (err) throw err;
+                        //    console.log("inserted "+name2+" "+splitData[2]);
+                        //});
                     });
                     
                     
@@ -251,6 +275,19 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                 if (err) throw err;
                 socket.emit("drivertable", res);
             });
+            
+            
+        })
+        socket.on("racecommand", function(data) {
+            console.log(data);
+            if (data == "start"){
+                serialPort.write("Start");
+            }
+            if (data == "stop"){
+                serialPort.write("Quit");
+            }
+                
+            
             
             
         })

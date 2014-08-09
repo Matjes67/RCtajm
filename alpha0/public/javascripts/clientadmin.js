@@ -37,6 +37,15 @@ console.log("adminpage");
     	});
   	}
 
+  	var startRace = function() {
+  		console.log("startracebutton");
+    	socket.emit("racecommand", "start");
+  	}
+  	var stopRace = function() {
+  		console.log("STOPracebutton");
+    	socket.emit("racecommand", "stop");
+  	}
+
 		//listen for output
 		socket.on("drivertable", function(data) {
 			console.log(data);
