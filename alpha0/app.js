@@ -119,6 +119,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             if (receivedData.indexOf('\n') >= 0 && receivedData.indexOf('C') >= 0) {
                 
                 splitData2 = receivedData.substring(receivedData.indexOf('C'), receivedData.indexOf('\n')+1);
+                receivedData = receivedData.replace(splitData2,"");
                 console.log(splitData2);
                 splitData = splitData2.split(":");
                 console.log("."+receivedData);
