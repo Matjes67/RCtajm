@@ -316,7 +316,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                 serialPort.write("Start");
                 
 
-                child = exec('vlc sound/AirHorn-SoundBible.com-1561808001.mp3',
+                child = exec('mpg123 sound/AirHorn-SoundBible.com-1561808001.mp3',
                   function (error, stdout, stderr) {
                     //console.log('stdout: ' + stdout);
                     //console.log('stderr: ' + stderr);
