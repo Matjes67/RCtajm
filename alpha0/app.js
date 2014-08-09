@@ -11,6 +11,9 @@ var users = require('./routes/users');                  // Express template
 var admin = require('./routes/admin');
 
 var io = require('socket.io');
+//var spawn = require('child_process').spawn;
+var exec = require('child_process').exec,
+                    child;
 
 var app = express(),
 mongo = require('mongodb'),
@@ -311,6 +314,19 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             console.log(data);
             if (data == "start"){
                 serialPort.write("Start");
+                
+
+                child = exec('vlc sound/AirHorn-SoundBible.com-1561808001.mp3',
+                  function (error, stdout, stderr) {
+                    //console.log('stdout: ' + stdout);
+                    //console.log('stderr: ' + stderr);
+                    if (error !== null) {
+                      console.log('exec error: ' + error);
+                    }
+                });
+                //spawn('vlc', 'AirHorn-SoundBible.com-1561808001.mp3', function() {
+                    //sound end calback
+               
             }
             if (data == "stop"){
                 serialPort.write("Quit");
@@ -327,9 +343,20 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             }
                 
             
+        });
+        socket.on("getAllLaps", function(data) {
+            console.log(data);
             
+            var colLaps = db.collection("laptimes");
+            colLaps.find({ name: data}).sort({laps: 1}).toArray( function(err,res) {
+                if (err) throw err;
+                socket.emit("laptimes", res);
+            });
+            
+                
             
         });
+
     });
 
 

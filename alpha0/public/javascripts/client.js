@@ -1,12 +1,17 @@
 console.log("hello world");
 
-//(function() {
+var buttonGetLaps = function(indata) {
+	
+	console.log(".in-"+indata);
+	
+	socket.emit("getAllLaps", indata);
+}
 	var getNode = function(s) {
 		return document.querySelector(s);
 	};
 	
 	function msToTime(duration) {
-        var milliseconds = parseInt((duration%1000)/100)
+        var milliseconds = parseInt(duration%1000)
             , seconds = parseInt((duration/1000)%60)
             , minutes = parseInt((duration/(1000*60))%60)
             , hours = parseInt((duration/(1000*60*60))%24);
@@ -14,6 +19,9 @@ console.log("hello world");
         hours = (hours < 10) ? "0" + hours : hours;
         minutes = (minutes < 10) ? "0" + minutes : minutes;
         seconds = (seconds < 10) ? "0" + seconds : seconds;
+        //milliseconds = (milliseconds < 1000) ? "0" + milliseconds : milliseconds;
+        milliseconds = (parseInt(milliseconds) < 100) ? "0" + milliseconds : milliseconds;
+        milliseconds = (parseInt(milliseconds) < 10) ? "0" + milliseconds : milliseconds;
 
         return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
     };
@@ -37,42 +45,57 @@ console.log("hello world");
 
 
 		//listen for output
-		socket.on("laptime", function(data) {
-			console.log("got laptime");
+		socket.on("laptimes", function(data) {
+			console.log("got laptime"+data);
+			var messages = document.querySelector(".car-laps tbody");
+			messages.parentNode.removeChild(messages);
+			var cartable = document.querySelector(".car-laps table");
+			cartable.appendChild(document.createElement("tbody"));
+			messages = document.querySelector(".car-laps tbody");
 			
-			//if(data.length) {
+			if(data.length) {
 				//loop throug results
-			//	for(var x = 0; x< data.length; x++) {
+				for(var x = 0; x< data.length; x++) {
 					var tr = document.createElement("tr");
 					//message.setAttribute("class", "car-laps");
 					var th = document.createElement("th");
-					th.textContent = data.name;
-
+					th.textContent = data[x].name;
 					tr.appendChild(th);
+					
 					var td = document.createElement("td");
-					td.textContent = data.laps;
+					td.textContent = data[x].laps;
 					tr.appendChild(td);
+					
 					var td = document.createElement("td");
-					td.textContent = data.laptime;
+					if (x==0) {
+						td.textContent = data[x].lapTime;
+					}
+					else {
+						var lapdiff =  parseInt(data[x].lapTime) - parseInt(data[x-1].lapTime);
+						td.textContent = msToTime( lapdiff);
+					}
 					tr.appendChild(td);
+					
 					var td = document.createElement("td");
-					td.textContent = data.transponder;
+					td.textContent = data[x].transponder;
 					tr.appendChild(td);
+					
 					var td = document.createElement("td");
-					td.textContent = data.strength;
+					td.textContent = data[x].strength;
 					tr.appendChild(td);
+					
 					var td = document.createElement("td");
-					td.textContent = data.hits;
+					td.textContent = data[x].hits;
 					tr.appendChild(td);
 
 
 					//message.textContent = "\n <th>" + data.name + "</th> \n <td>" + data.laptime + "</td> \n <td>" + data.transponder + "</td> \n <td>" + data.strength + "</td> \n <td>" + data.hits+"</td> \n ";//data[x].name + ": " + data[x].message;
 
 					// append
-					//messages.appendChild(tr);
-					//messages.insertBefore(tr, messages.firstChild);
-				//}
-			//}
+					messages.appendChild(tr);
+					messages.insertBefore(tr, messages.firstChild);
+				}
+			}
 		});
 
 		socket.on("cartable", function(data) {
@@ -99,19 +122,31 @@ console.log("hello world");
 					tr.appendChild(th);
 
 					
-						var td = document.createElement("td");
-						td.textContent = data[x].laps;
-						tr.appendChild(td);
+					var td = document.createElement("td");
+					td.textContent = data[x].laps;
+					tr.appendChild(td);
 
-						var td = document.createElement("td");
-						td.textContent = msToTime(data[x].totalTime);
-						tr.appendChild(td);
+					var td = document.createElement("td");
+					td.textContent = msToTime(data[x].totalTime);
+					tr.appendChild(td);
 
-						var td = document.createElement("td");
-						td.textContent = data[x].lastLapTime;
-						tr.appendChild(td);
+					//last lap
+					var td = document.createElement("td");
+					td.textContent = data[x].lastLapTime;
+					tr.appendChild(td);
+
+					// best lap
+					var td = document.createElement("td");
+					td.textContent = data[x].lastLapTime;
+					tr.appendChild(td);
 					
-					
+					//button
+					var td = document.createElement("td");
+					var span = document.createElement('span');
+					span.innerHTML = '<input type=button value="+" onclick="buttonGetLaps(\''+data[x].name+'\')" />';
+
+					td.appendChild(span);
+					tr.appendChild(td);
 
 					
 					// append
