@@ -148,7 +148,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                             var lap;
                             if (docs.length>0) {
                                 
-                                var lap = (splitData[2] - docs[0].lapTime)/1000;
+                                var lap = (splitData[2] - docs[0].lapTime);
                                 var totallaps = docs[0].laps+1;
                                 console.log(splitData[1]+"Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap);  
                                 

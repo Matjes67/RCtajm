@@ -25,6 +25,21 @@ var buttonGetLaps = function(indata) {
 
         return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
     };
+    function msToTimeNoHour(duration) {
+        var milliseconds = parseInt(duration%1000)
+            , seconds = parseInt((duration/1000)%60)
+            , minutes = parseInt((duration/(1000*60))%60)
+            , hours = parseInt((duration/(1000*60*60))%24);
+
+        hours = (hours < 10) ? "0" + hours : hours;
+        minutes = (minutes < 10) ? "0" + minutes : minutes;
+        seconds = (seconds < 10) ? "0" + seconds : seconds;
+        //milliseconds = (milliseconds < 1000) ? "0" + milliseconds : milliseconds;
+        milliseconds = (parseInt(milliseconds) < 100) ? "0" + milliseconds : milliseconds;
+        milliseconds = (parseInt(milliseconds) < 10) ? "0" + milliseconds : milliseconds;
+
+        return minutes + ":" + seconds + "." + milliseconds;
+    };
 	// get nodes
 	var cartable = getNode(".car-table");
 	var status = getNode(".chat-status span");
@@ -68,14 +83,18 @@ var buttonGetLaps = function(indata) {
 					
 					var td = document.createElement("td");
 					if (x==0) {
-						td.textContent = data[x].lapTime;
+						td.textContent = 0;
 					}
 					else {
 						var lapdiff =  parseInt(data[x].lapTime) - parseInt(data[x-1].lapTime);
-						td.textContent = msToTime( lapdiff);
+						td.textContent = msToTimeNoHour( lapdiff);
 					}
 					tr.appendChild(td);
 					
+					var td = document.createElement("td");
+					td.textContent = msToTime(data[x].lapTime);
+					tr.appendChild(td);
+
 					var td = document.createElement("td");
 					td.textContent = data[x].transponder;
 					tr.appendChild(td);
@@ -132,12 +151,17 @@ var buttonGetLaps = function(indata) {
 
 					//last lap
 					var td = document.createElement("td");
-					td.textContent = data[x].lastLapTime;
+					td.textContent = msToTimeNoHour( data[x].lastLapTime);
 					tr.appendChild(td);
 
 					// best lap
 					var td = document.createElement("td");
 					td.textContent = data[x].lastLapTime;
+					tr.appendChild(td);
+
+					// avg lap
+					var td = document.createElement("td");
+					td.textContent = msToTimeNoHour(data[x].totalTime/data[x].laps);
 					tr.appendChild(td);
 					
 					//button
