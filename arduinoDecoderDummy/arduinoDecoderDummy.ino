@@ -1,12 +1,17 @@
-int counter = 0;
+int counter = 200;
+
+
 void setup() {
   Serial.begin(9600);
 }
 
 void loop() {
   counter++;
-  
-  int car = analogRead(A0);
+  if (counter >=210) {
+    counter = 200;
+    
+  }
+  int car = counter;//analogRead(A0);
   int hit = analogRead(A1);
   int str = analogRead(A3);
   
