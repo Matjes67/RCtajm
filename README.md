@@ -15,7 +15,7 @@ Download and install arch linux to a sd card. follow guide on raspberrys homepag
 
 * pacman -Suy
 * reboot
-* pacman -S nodejs git python2 mongodb base-devel iw
+* pacman -S nodejs git python2 mongodb base-devel iw mpg123 hostapd dnsmasqd
 * node -v
 * npm -v
 * systemctl enable mongodb
@@ -30,23 +30,4 @@ Download and install arch linux to a sd card. follow guide on raspberrys homepag
 
 Installing Wifi AP mode
 =======================
-
-* pacman -S hostapd dnsmasqd
-* nano /etc/hostapd/hostapd.conf
-
-  ssid=RCtajm
-  #wpa_passphrase=Somepassphrase
-  interface=wlan0
-  bridge=br0
-  auth_algs=3
-  channel=2
-  driver=nl80211
-  hw_mode=g
-  logger_stdout=-1
-  logger_stdout_level=2
-  max_num_sta=5
-  rsn_pairwise=CCMP
-  #wpa=2
-  #wpa_key_mgmt=WPA-PSK
-  #wpa_pairwise=TKIP CCMP
 
