@@ -10,6 +10,10 @@ var routes = require('./routes/index');                 // Express template
 var users = require('./routes/users');                  // Express template
 var admin = require('./routes/admin');
 
+var argv = require('minimist')(process.argv.slice(2)); // hande input arguments
+console.dir(argv);
+
+
 var io = require('socket.io');
 //var spawn = require('child_process').spawn;
 var exec = require('child_process').exec,
@@ -20,14 +24,20 @@ mongo = require('mongodb'),
 server = require('http').createServer(app).listen(8080),
 client = io.listen(server);
 
-
+var AMB = true;
 
 //debug('Express server listening on port ' + server.address().port);
 
 var SerialPort = require("serialport").SerialPort;
 var sendData = "";
 var serialPort;
-var portName = '/dev/ttyACM0'; //change this to your serial port
+if (AMB) {
+    var portName = '/dev/ttyUSB0'; 
+}
+else {
+    var portName = '/dev/ttyACM0'; 
+}
+//var portName = '/dev/ttyACM0'; //change this to your serial port
 
 
 // view engine setup                                    // Express template
@@ -95,12 +105,97 @@ module.exports = app;                                   // Express template
 
 }*/
 
+function decodeAMB(indata,db,cb) {
+
+        return out;
+};
+
+function inputDataToDB(indata,db2, cb) {
+    console.log("inputfunction:"+indata.transponder);
+    var colLaps = db2.collection("laptimes");
+    var colDrivers = db2.collection("drivers");
+    var colRace = db2.collection("currentrace");
+
+    var name2 =  indata.transponder;
+
+    colDrivers.findOne({ transponders: indata.transponder}, function(err, document, name2) {
+        if (err) throw err;
+        if (document !== null) {
+            name2 = document.name;
+        } else {
+            name2 = indata.transponder;
+        }
+        
+        colLaps.find({ name: name2 }, {'limit':1, 'sort':[[ 'lapTime', 'desc']]}).toArray(function(err, docs) {            
+            var lap;
+            if (docs.length>0) {
+                
+                var lap = (indata.time - docs[0].lapTime);
+                var totallaps = docs[0].laps+1;
+                console.log(indata.transponder+"Returned #" + docs[0].lapTime + " serial: "+indata.time+" sum:" + lap);  
+                
+                
+                
+                //client.emit("laptime", "name: "+name2+" tran: "+splitData[1]+" laptime: "+lap/1000+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
+                
+
+            } else {
+                //console.log("no laps");
+                lap = "first lap";
+                totallaps = 0;
+                    //"name: "+name2+" tran: "+splitData[1]+" laptime: first lap"+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
+        
+            }
+            client.emit("laptime", {
+                    name: name2,
+                    laptime: lap,
+                    transponder: indata.transponder,
+                    strength: indata.strength,
+                    hits: indata.hits,
+                    laps: totallaps
+            });
+
+            colLaps.insert({name: name2, 
+                         transponder: indata.transponder,
+                             lapTime: parseInt(indata.time), 
+                            strength: parseInt(indata.strength), 
+                                hits: parseInt(indata.hits),
+                                laps: totallaps }, 
+                function(err,result) {
+                    if (err) throw err;
+                }
+            );
+
+            
+            //console.log("race insert:"+name2+splitData[0]+":"+splitData[1]+":"+splitData[2]+":");
+            colRace.update({name: name2}, {  name: name2, totalTime:parseInt(indata.time), laps: parseInt(totallaps), lastLapTime: lap },{upsert: true},
+                function(err,result) {
+                    if (err) throw err;
+                    //console.log("racetable result");
+                }
+
+            );
+            colRace.find({}).sort({laps: -1, totalTime: 1}).toArray(function(err,res) {
+            //colRace.find({}, {  "sort": [['laps','asc'], ['totalTime','desc']] }, function(err,result) {
+                    if (err) throw err;
+                    //console.log("cartable result"+res);
+                    client.emit("cartable", res);
+                }
+
+            );
+        });
+    });
+
+    cb();
+}
 mongo.connect("mongodb://localhost/rctajm", function(err,db) {
     if (err) throw err;
     var colLaps = db.collection("laptimes");
     colLaps.remove({}, function(err,res) {
         if (err) throw err;
     });
+
+    
 
     console.log("Opening serial device on "+portName);
     var receivedData = "";
@@ -119,116 +214,130 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         serialPort.on('data', function(data) {
             receivedData += data.toString();
             
-            if (receivedData[0] !== 'C' && receivedData.length>2 && receivedData.indexOf('C') >= 0) {
-                console.log("FIRST NOT START CHAR");
-                receivedData = receivedData.substring(receivedData.indexOf('C'));
-            }
-            if (receivedData.indexOf('\n') >= 0 && receivedData.indexOf('C') >= 0) {
-                
-                var splitData2 = receivedData.substring(receivedData.indexOf('C'), receivedData.indexOf('\n')+1);
-                receivedData = receivedData.replace(splitData2,"");
-                console.log(splitData2);
-                var splitData = splitData2.split(":");
-                console.log("."+receivedData);
+            if (AMB) {
+                if (receivedData.substring(receivedData.indexOf('@')).indexOf('\n') >= 0 && receivedData.indexOf('@') >= 0) {
+                    var result = receivedData.substring(receivedData.indexOf('@'));
+                    receivedData = receivedData.substring(receivedData.indexOf('@'));
+                    receivedData = receivedData.substring(receivedData.indexOf('\n'));
+                    result = result.split('\t');
+                    console.log(result[1]+":"+result[2]+":"+result[3]+":"+result[4]+":"+result[5]+":");
+                    var time = result[4]*1000;
+                    console.log(time);
 
-                //receivedData = "";
-                
-                if (splitData.length>4) {
-                    var colDrivers = db.collection("drivers");
-                    var name2 =  splitData[1];
-                    colDrivers.findOne({ transponders: splitData[1]}, function(err, document, name2) {
-                        if (err) throw err;
-                        if (document !== null) {
-                            name2 = document.name;
-                        } else {
-                            name2 = splitData[1];
-                        }
-                        var colLaps = db.collection("laptimes");
-                        colLaps.find({ name: name2 }, {'limit':1, 'sort':[[ 'lapTime', 'desc']]}).toArray(function(err, docs) {            
-                            var lap;
-                            if (docs.length>0) {
-                                
-                                var lap = (splitData[2] - docs[0].lapTime);
-                                var totallaps = docs[0].laps+1;
-                                console.log(splitData[1]+"Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap);  
-                                
-                                
-				                
-                                //client.emit("laptime", "name: "+name2+" tran: "+splitData[1]+" laptime: "+lap/1000+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
-                                
-
-                            } else {
-                                //console.log("no laps");
-                                lap = "first lap";
-				                totallaps = 0;
-                                    //"name: "+name2+" tran: "+splitData[1]+" laptime: first lap"+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
-                        
-                            }
-                            client.emit("laptime", {
-                                    name: name2,
-                                    laptime: lap,
-                                    transponder: splitData[1],
-                                    strength: splitData[3],
-                                    hits: splitData[4],
-                                    laps: totallaps
-                            });
-
-                            colLaps.insert({name: name2, 
-                                         transponder: splitData[1],
-                                             lapTime: parseInt(splitData[2]), 
-                                            strength: parseInt(splitData[3]), 
-                                                hits: parseInt(splitData[4]),
-                                                laps: totallaps }, 
-                                function(err,result) {
-                                    if (err) throw err;
-
-                                    //console.log("inserted "+name2+" "+splitData[2]+" trying to clear:"+splitData2+" in:"+receivedData);
-                                    receivedData = receivedData.replace(splitData2,"");
-                                }
-                            );
-
-                            var colRace = db.collection("currentrace");
-                            console.log("race insert:"+name2+splitData[0]+":"+splitData[1]+":"+splitData[2]+":");
-                            colRace.update({name: name2}, {  name: name2, totalTime:parseInt(splitData[2]), laps: parseInt(totallaps), lastLapTime: lap },{upsert: true},
-                                function(err,result) {
-                                    if (err) throw err;
-                                    //console.log("racetable result");
-                                }
-
-                            );
-                            colRace.find({}).sort({laps: -1, totalTime: 1}).toArray(function(err,res) {
-                            //colRace.find({}, {  "sort": [['laps','asc'], ['totalTime','desc']] }, function(err,result) {
-                                    if (err) throw err;
-                                    //console.log("cartable result"+res);
-                                    client.emit("cartable", res);
-                                }
-
-                            );
-                            
-                            colDrivers.find({}).toArray (function(err,res) {
-                                //console.log(res);
-                                //console.log(res.transponders);
-                            });
-
-                            //client.emit("cartable", "banan")
-                        });
-                            
-                            //var laptime = splitData - document.lapTime
-                            
-                        //client.emit("laptime", "laptime "+name2+" "+splitData[1]+" "+splitData[2]+" "+splitData[3]+" "+splitData[4]+" ");
-                
-                        
-
-                        //var colLaps = db.collection("laptimes");
-                        //colLaps.insert({name: name2, lapTime: parseInt(splitData[2]), strength: parseInt(splitData[3]), hits: parseInt(splitData[4]) }, function(err,result) {
-                        //    if (err) throw err;
-                        //    console.log("inserted "+name2+" "+splitData[2]);
-                        //});
-                    });
+                    inputDataToDB({transponder: result[3], time: time, strength: result[5], hits: result[6]},db, function(){});
+                }
+            } else {
+                if (receivedData[0] !== 'C' && receivedData.length>2 && receivedData.indexOf('C') >= 0) {
+                    console.log("FIRST NOT START CHAR");
+                    receivedData = receivedData.substring(receivedData.indexOf('C'));
+                }
+                if (receivedData.indexOf('\n') >= 0 && receivedData.indexOf('C') >= 0) {
                     
+                    var splitData2 = receivedData.substring(receivedData.indexOf('C'), receivedData.indexOf('\n')+1);
+                    receivedData = receivedData.replace(splitData2,"");
+                    console.log(splitData2);
+                    var splitData = splitData2.split(":");
+                    console.log("."+receivedData);
+
+                    //receivedData = "";
+                    
+                    if (splitData.length>4) {
+                        var colDrivers = db.collection("drivers");
+                        var name2 =  splitData[1];
+                        colDrivers.findOne({ transponders: splitData[1]}, function(err, document, name2) {
+                            if (err) throw err;
+                            if (document !== null) {
+                                name2 = document.name;
+                            } else {
+                                name2 = splitData[1];
+                            }
+                            var colLaps = db.collection("laptimes");
+                            colLaps.find({ name: name2 }, {'limit':1, 'sort':[[ 'lapTime', 'desc']]}).toArray(function(err, docs) {            
+                                var lap;
+                                if (docs.length>0) {
+                                    
+                                    var lap = (splitData[2] - docs[0].lapTime);
+                                    var totallaps = docs[0].laps+1;
+                                    console.log(splitData[1]+"Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap);  
+                                    
+                                    
+    				                
+                                    //client.emit("laptime", "name: "+name2+" tran: "+splitData[1]+" laptime: "+lap/1000+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
+                                    
+
+                                } else {
+                                    //console.log("no laps");
+                                    lap = "first lap";
+    				                totallaps = 0;
+                                        //"name: "+name2+" tran: "+splitData[1]+" laptime: first lap"+" strength: "+splitData[3]+" hits: "+splitData[4]+" ");
+                            
+                                }
+                                client.emit("laptime", {
+                                        name: name2,
+                                        laptime: lap,
+                                        transponder: splitData[1],
+                                        strength: splitData[3],
+                                        hits: splitData[4],
+                                        laps: totallaps
+                                });
+
+                                colLaps.insert({name: name2, 
+                                             transponder: splitData[1],
+                                                 lapTime: parseInt(splitData[2]), 
+                                                strength: parseInt(splitData[3]), 
+                                                    hits: parseInt(splitData[4]),
+                                                    laps: totallaps }, 
+                                    function(err,result) {
+                                        if (err) throw err;
+
+                                        //console.log("inserted "+name2+" "+splitData[2]+" trying to clear:"+splitData2+" in:"+receivedData);
+                                        receivedData = receivedData.replace(splitData2,"");
+                                    }
+                                );
+
+                                var colRace = db.collection("currentrace");
+                                console.log("race insert:"+name2+splitData[0]+":"+splitData[1]+":"+splitData[2]+":");
+                                colRace.update({name: name2}, {  name: name2, totalTime:parseInt(splitData[2]), laps: parseInt(totallaps), lastLapTime: lap },{upsert: true},
+                                    function(err,result) {
+                                        if (err) throw err;
+                                        //console.log("racetable result");
+                                    }
+
+                                );
+                                colRace.find({}).sort({laps: -1, totalTime: 1}).toArray(function(err,res) {
+                                //colRace.find({}, {  "sort": [['laps','asc'], ['totalTime','desc']] }, function(err,result) {
+                                        if (err) throw err;
+                                        //console.log("cartable result"+res);
+                                        client.emit("cartable", res);
+                                    }
+
+                                );
+                                
+                                colDrivers.find({}).toArray (function(err,res) {
+                                    //console.log(res);
+                                    //console.log(res.transponders);
+                                });
+
+                                //client.emit("cartable", "banan")
+                            });
+                                
+                                //var laptime = splitData - document.lapTime
+                                
+                            //client.emit("laptime", "laptime "+name2+" "+splitData[1]+" "+splitData[2]+" "+splitData[3]+" "+splitData[4]+" ");
+                    
+                            
+
+                            //var colLaps = db.collection("laptimes");
+                            //colLaps.insert({name: name2, lapTime: parseInt(splitData[2]), strength: parseInt(splitData[3]), hits: parseInt(splitData[4]) }, function(err,result) {
+                            //    if (err) throw err;
+                            //    console.log("inserted "+name2+" "+splitData[2]);
+                            //});
+                        });
+                        
+                        
+                    }
                     
                 }
-                
             }
          // send the incoming data to browser with websockets.
        //socketServer.emit('update', sendData);
