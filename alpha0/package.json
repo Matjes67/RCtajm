@@ -11,7 +11,7 @@
     "morgan": "latest",
     "cookie-parser": "latest",
     "body-parser": "latest",
-    
+    "debug": "~0.7.4",
     "jade": "latest",
     "mongodb":"latest",
     "socket.io":"1.0.6",
