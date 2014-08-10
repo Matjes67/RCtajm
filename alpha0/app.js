@@ -1,6 +1,6 @@
 var express = require('express');                       // Express template
 var path = require('path');                             // Express template
-var favicon = require('static-favicon');                // Express template
+var favicon = require('serve-favicon');                // Express template
 var logger = require('morgan');                         // Express template
 var cookieParser = require('cookie-parser');            // Express template
 var bodyParser = require('body-parser');                // Express template
@@ -10,33 +10,36 @@ var routes = require('./routes/index');                 // Express template
 var users = require('./routes/users');                  // Express template
 var admin = require('./routes/admin');
 
+var serialPort;
+
 var argv = require('minimist')(process.argv.slice(2)); // hande input arguments
 console.dir(argv);
 
+var portName = argv.p; 
+
+if ( argv.d == "amb") {
+    var AMB = true;    
+}
+else {
+    var AMB = false;
+}
+console.log(AMB);
 
 var io = require('socket.io');
 //var spawn = require('child_process').spawn;
-var exec = require('child_process').exec,
-                    child;
+var exec = require('child_process').exec, child;
+
 
 var app = express(),
 mongo = require('mongodb'),
 server = require('http').createServer(app).listen(8080),
 client = io.listen(server);
 
-var AMB = true;
-
 //debug('Express server listening on port ' + server.address().port);
 
 var SerialPort = require("serialport").SerialPort;
 var sendData = "";
-var serialPort;
-if (AMB) {
-    var portName = '/dev/ttyUSB0'; 
-}
-else {
-    var portName = '/dev/ttyACM0'; 
-}
+
 //var portName = '/dev/ttyACM0'; //change this to your serial port
 
 
@@ -44,10 +47,10 @@ else {
 app.set('views', path.join(__dirname, 'views'));        // Express template
 app.set('view engine', 'jade');                         // Express template
 
-app.use(favicon());                                     // Express template
+app.use(favicon(__dirname + '/public/images/favicon.ico'));                                     // Express template
 app.use(logger('dev'));                                 // Express template
-app.use(bodyParser.json());                             // Express template
-app.use(bodyParser.urlencoded());                       // Express template
+//app.use(bodyParser.json());                             // Express template
+//app.use(bodyParser.urlencoded());                       // Express template
 app.use(cookieParser());                                // Express template
 app.use(express.static(path.join(__dirname, 'public'))); // Express template
 
