@@ -13,7 +13,7 @@ var admin = require('./routes/admin');
 var serialPort;
 
 var argv = require('minimist')(process.argv.slice(2)); // hande input arguments
-console.dir(argv);
+console.log(argv);
 
 var portName = argv.p; 
 
@@ -23,7 +23,7 @@ if ( argv.d == "amb") {
 else {
     var AMB = false;
 }
-console.log(AMB);
+debug(AMB);
 
 var io = require('socket.io');
 //var spawn = require('child_process').spawn;
@@ -114,7 +114,7 @@ function decodeAMB(indata,db,cb) {
 };
 
 function inputDataToDB(indata,db2, cb) {
-    console.log("inputfunction:"+indata.transponder);
+    debug("inputfunction:"+indata.transponder);
     var colLaps = db2.collection("laptimes");
     var colDrivers = db2.collection("drivers");
     var colRace = db2.collection("currentrace");
@@ -135,7 +135,7 @@ function inputDataToDB(indata,db2, cb) {
                 
                 var lap = (indata.time - docs[0].lapTime);
                 var totallaps = docs[0].laps+1;
-                console.log(indata.transponder+"Returned #" + docs[0].lapTime + " serial: "+indata.time+" sum:" + lap);  
+                debug(indata.transponder+"Returned #" + docs[0].lapTime + " serial: "+indata.time+" sum:" + lap);  
                 
                 
                 
@@ -223,24 +223,24 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                     receivedData = receivedData.substring(receivedData.indexOf('@'));
                     receivedData = receivedData.substring(receivedData.indexOf('\n'));
                     result = result.split('\t');
-                    console.log(result[1]+":"+result[2]+":"+result[3]+":"+result[4]+":"+result[5]+":");
+                    debug(result[1]+":"+result[2]+":"+result[3]+":"+result[4]+":"+result[5]+":");
                     var time = result[4]*1000;
-                    console.log(time);
+                    debug(time);
 
                     inputDataToDB({transponder: result[3], time: time, strength: result[5], hits: result[6]},db, function(){});
                 }
             } else {
                 if (receivedData[0] !== 'C' && receivedData.length>2 && receivedData.indexOf('C') >= 0) {
-                    console.log("FIRST NOT START CHAR");
+                    debug("FIRST NOT START CHAR");
                     receivedData = receivedData.substring(receivedData.indexOf('C'));
                 }
                 if (receivedData.indexOf('\n') >= 0 && receivedData.indexOf('C') >= 0) {
                     
                     var splitData2 = receivedData.substring(receivedData.indexOf('C'), receivedData.indexOf('\n')+1);
                     receivedData = receivedData.replace(splitData2,"");
-                    console.log(splitData2);
+                    debug(splitData2);
                     var splitData = splitData2.split(":");
-                    console.log("."+receivedData);
+                    debug("."+receivedData);
 
                     //receivedData = "";
                     
@@ -261,7 +261,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                                     
                                     var lap = (splitData[2] - docs[0].lapTime);
                                     var totallaps = docs[0].laps+1;
-                                    console.log(splitData[1]+"Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap);  
+                                    debug(splitData[1]+"Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap);  
                                     
                                     
     				                
@@ -299,7 +299,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                                 );
 
                                 var colRace = db.collection("currentrace");
-                                console.log("race insert:"+name2+splitData[0]+":"+splitData[1]+":"+splitData[2]+":");
+                                debug("race insert:"+name2+splitData[0]+":"+splitData[1]+":"+splitData[2]+":");
                                 colRace.update({name: name2}, {  name: name2, totalTime:parseInt(splitData[2]), laps: parseInt(totallaps), lastLapTime: lap },{upsert: true},
                                     function(err,result) {
                                         if (err) throw err;
