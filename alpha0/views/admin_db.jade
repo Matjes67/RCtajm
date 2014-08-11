@@ -1,0 +1,56 @@
+extends layout
+
+block content
+  h1= title
+  h2 Admin: Race manager
+  
+  h3 Heat manager
+  div.heat
+    div.current-heat Current Heat:
+    div.heat-table
+      table
+        caption Race Heats
+        thead
+          tr
+            th Name
+            th Date
+            th id
+            th Status
+            
+        tbody
+    p Add new Heat
+    input(type="text", class="heat-name", placeholder="Name for heat, ex Training 1, Qualifying 1")
+
+    button(onclick='sendNewHeat()') Add Heat
+
+  h3 Manage Raceday
+  button(onclick='updateRace()') Update
+  div.races
+    div.current-race Current race:
+    div.races-table
+      table
+        caption Select race day
+        thead
+          tr
+            th Name
+            th Date
+            th id
+            
+        tbody
+        
+  div.add
+    p Add new raceday
+    input(type="text", class="driver-name", placeholder="Enter name of race")
+
+    button(onclick='sendNewRace()') Add race
+
+  div.settings
+    h3 System Settings
+  p Sync time from mobile:
+
+  div.servertime
+
+  button(onclick='sendTimeSync()') Sync Time
+  
+  script(src='/socket.io/socket.io.js')
+  script(src='/javascripts/clientadmin_db.js')

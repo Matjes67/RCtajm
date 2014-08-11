@@ -5,6 +5,8 @@ var router = express.Router();
 router.get('/', function(req, res) {
   res.render('admin', { title: 'RCtajm' });
 });
-
+router.get('/db', function(req, res) {
+  res.render('admin_db', { title: 'RCtajm' });
+});
 
 module.exports = router;

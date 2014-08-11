@@ -47,7 +47,7 @@ var sendData = "";
 app.set('views', path.join(__dirname, 'views'));        // Express template
 app.set('view engine', 'jade');                         // Express template
 
-app.use(favicon(__dirname + '/public/images/favicon.ico'));                                     // Express template
+app.use(favicon(__dirname + '/public/images/favicon.ico')); // Express template
 app.use(logger('dev'));                                 // Express template
 //app.use(bodyParser.json());                             // Express template
 //app.use(bodyParser.urlencoded());                       // Express template
@@ -68,21 +68,21 @@ app.use(function(req, res, next) {                      // Express template
 /// error handlers                                      // Express template
 
 // development error handler                            // Express template
-// will print stacktrace                                                // Express template
-if (app.get('env') === 'development') {                                                 // Express template
-    app.use(function(err, req, res, next) {                                                 // Express template
-        res.status(err.status || 500);                                              // Express template
-        res.render('error', {                                               // Express template
-            message: err.message,                                               // Express template
-            error: err                                              // Express template
-        });                                                 // Express template
+// will print stacktrace                                // Express template
+if (app.get('env') === 'development') {                 // Express template
+    app.use(function(err, req, res, next) {             // Express template
+        res.status(err.status || 500);                  // Express template
+        res.render('error', {                           // Express template
+            message: err.message,                       // Express template
+            error: err                                  // Express template
+        });                                             // Express template
     });                                                 // Express template
-}                                               // Express template
+}                                                       // Express template
 
-// production error handler                                 // Express template
-// no stacktraces leaked to user                            // Express template
-app.use(function(err, req, res, next) {                     // Express template
-    res.status(err.status || 500);                                  // Express template
+// production error handler                             // Express template
+// no stacktraces leaked to user                        // Express template
+app.use(function(err, req, res, next) {                 // Express template
+    res.status(err.status || 500);                      // Express template
     res.render('error', {                               // Express template
         message: err.message,                           // Express template
         error: {}                                       // Express template
@@ -94,30 +94,25 @@ module.exports = app;                                   // Express template
 
 
 
+// Manage what race data to get
+var globalRaceNr = 0;
+var globalFirstTime = 1;  // tells if the first car have past the timing loop at begining of race, official time start when first car pass on race start. 
+var globalHeatNr = 0;
 
 
-/*function handleData(inData,col) {
-    console.log("handleData"+inData);
-
-    var name = "auto", 
-        message = inData;
-
-        col.insert({name: name, message: message }, function(err,result) {
-            if (err) throw err;
-        });
-
-}*/
 
 function decodeAMB(indata,db,cb) {
 
         return out;
 };
 
-function inputDataToDB(indata,db2, cb) {
+function inputDataToDB(indata,db, cb) {
     debug("inputfunction:"+indata.transponder);
-    var colLaps = db2.collection("laptimes");
-    var colDrivers = db2.collection("drivers");
-    var colRace = db2.collection("currentrace");
+    var colLaps = db.collection("laptimes"+globalRaceNr+"x"+globalHeatNr);
+    var colDrivers = db.collection("drivers");
+    var colRace = db.collection("currentrace"+globalRaceNr+"x"+globalHeatNr);
+    var colAdmRace = db.collection("races");
+    var colAdmHeat = db.collection("heats"+globalRaceNr);
 
     var name2 =  indata.transponder;
 
@@ -193,10 +188,12 @@ function inputDataToDB(indata,db2, cb) {
 }
 mongo.connect("mongodb://localhost/rctajm", function(err,db) {
     if (err) throw err;
-    var colLaps = db.collection("laptimes");
-    colLaps.remove({}, function(err,res) {
-        if (err) throw err;
-    });
+
+    var colLaps = db.collection("laptimes"+globalRaceNr+"x"+globalHeatNr);
+    var colDrivers = db.collection("drivers");
+    var colRace = db.collection("currentrace"+globalRaceNr+"x"+globalHeatNr);
+    var colAdmRace = db.collection("races");
+    var colAdmHeat = db.collection("heats"+globalRaceNr);
 
     
 
@@ -245,7 +242,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                     //receivedData = "";
                     
                     if (splitData.length>4) {
-                        var colDrivers = db.collection("drivers");
+                        //var colDrivers = db.collection("drivers");
                         var name2 =  splitData[1];
                         colDrivers.findOne({ transponders: splitData[1]}, function(err, document, name2) {
                             if (err) throw err;
@@ -254,7 +251,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                             } else {
                                 name2 = splitData[1];
                             }
-                            var colLaps = db.collection("laptimes");
+                            //var colLaps = db.collection("laptimes");
                             colLaps.find({ name: name2 }, {'limit':1, 'sort':[[ 'lapTime', 'desc']]}).toArray(function(err, docs) {            
                                 var lap;
                                 if (docs.length>0) {
@@ -298,7 +295,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                                     }
                                 );
 
-                                var colRace = db.collection("currentrace");
+                                //var colRace = db.collection("currentrace");
                                 debug("race insert:"+name2+splitData[0]+":"+splitData[1]+":"+splitData[2]+":");
                                 colRace.update({name: name2}, {  name: name2, totalTime:parseInt(splitData[2]), laps: parseInt(totallaps), lastLapTime: lap },{upsert: true},
                                     function(err,result) {
@@ -350,28 +347,17 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
 
     client.on("connection", function(socket) {
 
-        col = db.collection("laptimes"),
-            sendStatus = function(s) {
-                socket.emit("status", s);
-            };
-        
-        // emit all messages
-        col.find().limit(100).sort({_id: 1}).toArray(function(err,res) {
+        // send inital data
+        colAdmHeat.find({nr: globalHeatNr}).sort({nr:-1}).limit(1).toArray(function(err,res) {
             if (err) throw err;
-            //socket.emit("output", res);
-        });
-
-
-        //wait for input
-        socket.on("input", function(data) {
-            console.log(data);
-            
+            debug(res);
+            client.emit("currentHeat", res);
         });
 
         //wait for input
         socket.on("adddriver", function(data) {
             console.log(data);
-            var colDrivers = db.collection("drivers");
+            //var colDrivers = db.collection("drivers");
             colDrivers.insert({name: data.name, transponders: [ data.transponder ]}, function(err,result) {
                 if (err) throw err;
                 console.log("inserted "+data.name+" "+data.transponder);
@@ -387,7 +373,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         socket.on("addMoreTrans", function(data) {
             console.log(data);
             
-            var colDrivers = db.collection("drivers");
+            //var colDrivers = db.collection("drivers");
 
             var o_id = require('mongodb').ObjectID(data.id);
             if (data.transponder.length>1) {
@@ -413,7 +399,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         });
         socket.on("getdriver", function(data) {
             console.log(data);
-            var colDrivers = db.collection("drivers");
+            //var colDrivers = db.collection("drivers");
             
             colDrivers.find().sort({name: 1}).toArray(function(err,res) {
                 if (err) throw err;
@@ -436,19 +422,17 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                       console.log('exec error: ' + error);
                     }
                 });
-                //spawn('vlc', 'AirHorn-SoundBible.com-1561808001.mp3', function() {
-                    //sound end calback
-               
+
             }
             if (data == "stop"){
                 serialPort.write("Quit");
             }
             if (data == "clear"){
-                var colRace = db.collection("currentrace");
+                //var colRace = db.collection("currentrace");
                 colRace.remove({}, function(err,res) {
                     if (err) throw err;
                 });
-                var colLaps = db.collection("laptimes");
+                //var colLaps = db.collection("laptimes");
                 colLaps.remove({}, function(err,res) {
                     if (err) throw err;
                 });
@@ -459,7 +443,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         socket.on("getAllLaps", function(data) {
             console.log(data);
             
-            var colLaps = db.collection("laptimes");
+            //var colLaps = db.collection("laptimes");
             colLaps.find({ name: data}).sort({laps: 1}).toArray( function(err,res) {
                 if (err) throw err;
                 socket.emit("laptimes", res);
@@ -467,6 +451,150 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             
                 
             
+        });
+        socket.on("gettime", function(data) {
+            var now = new Date();
+            var jsonDate = now.toJSON();
+
+            socket.emit("servertime", jsonDate);
+        });
+        socket.on("mobiletime", function(data) {
+            // Somehow set system time to what is recieved
+            debug(data);
+        });
+        socket.on("newRace", function(raceName, jsonDate) {
+            // Somehow set system time to what is recieved
+            var nr = 0;
+            colAdmRace.find({}).sort({nr:-1}).limit(1).toArray(function(err,res) {
+                debug(res);
+                if (res.length) {
+                    debug("res iftrue"+res[0].nr);
+                    nr = res[0].nr+1;
+                }
+                else {
+                    debug("res if false");
+                    nr = 1;
+                }
+                
+                debug("racenumber"+nr);
+                colAdmRace.insert({raceName: raceName, 
+                             createDate: jsonDate,
+                                     nr: parseInt(nr) }, 
+                function(err,result) {
+                    if (err) throw err;
+                    debug(result);
+                    socket.emit("raceadded", "ok");
+                });
+            });
+            
+            //debug(data);
+        });
+
+        socket.on("getRaces", function(indata) {
+            debug("getRaces")
+            colAdmRace.find({}).sort({nr:-1}).toArray(function(err,res) {
+                if (err) throw err;
+                debug(res);
+                socket.emit("races", res);
+            });
+        });
+
+        socket.on("loadRace", function(indata) {
+            debug("loadRace "+indata)
+            globalRaceNr = parseInt(indata);
+
+            colLaps = db.collection("laptimes"+globalRaceNr);
+            colDrivers = db.collection("drivers"+globalRaceNr);
+            colRace = db.collection("currentrace"+globalRaceNr);
+            colAdmHeat = db.collection("heats"+globalRaceNr);
+            // Load databases
+
+            colAdmRace.find({nr: globalRaceNr}).sort({nr:-1}).limit(1).toArray(function(err,res) {
+                if (err) throw err;
+                debug(res);
+                socket.emit("currentRace", res);
+            });
+            colAdmHeat.find({}).sort({_id:-1}).toArray(function(err,res) {
+                if (err) throw err;
+                socket.emit("heats", res);
+            });
+        });
+
+        
+        socket.on("getCurrentRace", function(indata) {
+            debug("getCurrentRace "+indata)
+            colAdmRace.find({nr: globalRaceNr}).sort({nr:-1}).limit(1).toArray(function(err,res) {
+                if (err) throw err;
+                debug(res);
+                socket.emit("currentRace", res);
+            });
+            // Load databases
+        });
+
+        socket.on("newHeat", function(heatName, jsonDate) {
+            // Somehow set system time to what is recieved
+            var nr = 0;
+            //colAdmHeat = db.collection("heats"+globalRaceNr);
+            colAdmHeat.find({}).sort({nr:-1}).limit(1).toArray(function(err,res) {
+                debug(res);
+                if (res.length) {
+                    debug("res iftrue"+res[0].nr);
+                    nr = res[0].nr+1;
+                }
+                else {
+                    debug("res if false");
+                    nr = 1;
+                }
+                
+                debug("heatnumber"+nr);
+                colAdmHeat.insert({heatName: heatName, 
+                             createDate: jsonDate,
+                                     nr: parseInt(nr),
+                                 status: "pending" }, 
+                function(err,result) {
+                    if (err) throw err;
+                    debug(result);
+                    socket.emit("heatadded", "ok");
+                });
+            });
+            
+            //debug(data);
+        });
+        socket.on("getHeats", function(indata) {
+            debug("getHeats")
+            colAdmHeat.find({}).sort({nr:1}).toArray(function(err,res) {
+                if (err) throw err;
+                debug(res);
+                socket.emit("heats", res);
+            });
+        });
+        socket.on("loadHeat", function(indata) {
+            debug("loadHeat"+indata);
+            globalHeatNr = parseInt(indata);
+
+            colLaps = db.collection("laptimes"+globalRaceNr+"-"+globalHeatNr);
+            colDrivers = db.collection("drivers"+globalRaceNr);
+            colRace = db.collection("currentrace"+globalRaceNr+"-"+globalHeatNr);
+            colAdmHeat = db.collection("heats"+globalRaceNr);
+            // Load databases
+
+            colAdmHeat.find({nr: globalHeatNr}).sort({nr:-1}).limit(1).toArray(function(err,res) {
+                if (err) throw err;
+                debug(res);
+                client.emit("currentHeat", res);
+            });
+
+            
+            
+        });
+        socket.on("getCurrentHeat", function(indata) {
+            debug("getCurrentHeat "+indata)
+            colAdmHeat.find({nr: globalHeatNr}).sort({nr:-1}).limit(1).toArray(function(err,res) {
+                if (err) throw err;
+                debug(res);
+                socket.emit("currentHeat", res);
+            });
+            // Load databases
         });
 
     });

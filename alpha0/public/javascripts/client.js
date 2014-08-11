@@ -57,7 +57,7 @@ var buttonGetLaps = function(indata) {
 	}
 	if (socket !== undefined) {
 		console.log("ok");
-
+		socket.emit("firstconnect", "banan");
 
 		//listen for output
 		socket.on("laptimes", function(data) {
@@ -177,6 +177,15 @@ var buttonGetLaps = function(indata) {
 					driverbox.appendChild(tr);
 					//messages.insert(tr, messages.firstChild);
 				}
+			}
+		});
+
+		socket.on("currentHeat", function(data) {
+			if (data.length) {
+				console.log("currentheat"+data[0].heatName);
+				console.log(data);
+				var currentdiv = document.querySelector(".current-heat");
+				currentdiv.textContent = "Current Heat: "+data[0].heatName;
 			}
 		});
 
