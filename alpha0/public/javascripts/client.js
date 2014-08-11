@@ -1,3 +1,7 @@
+meSpeak.loadConfig("/javascripts/mespeak_config.json");
+meSpeak.loadVoice('/javascripts/voices/en/en-us.json');
+meSpeak.speak('hello world');
+
 console.log("hello world");
 
 var buttonGetLaps = function(indata) {
@@ -187,6 +191,14 @@ var buttonGetLaps = function(indata) {
 				var currentdiv = document.querySelector(".current-heat");
 				currentdiv.textContent = "Current Heat: "+data[0].heatName;
 			}
+		});
+
+		socket.on("laptime", function(data) {
+			
+				console.log("laptime"+data.name);
+				console.log(data);
+				meSpeak.speak(""+data.name+", "+data.laptime/1000);
+			
 		});
 
 		
