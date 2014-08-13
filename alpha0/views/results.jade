@@ -1,0 +1,24 @@
+extends layout
+
+block content
+
+ - function msToTime(duration) { var milliseconds = parseInt(duration%1000), seconds = parseInt((duration/1000)%60), minutes = parseInt((duration/(1000*60))%60), hours = parseInt((duration/(1000*60*60))%24); hours = (hours < 10) ? "0" + hours : hours; minutes = (minutes < 10) ? "0" + minutes : minutes; seconds = (seconds < 10) ? "0" + seconds : seconds; milliseconds = (parseInt(milliseconds) < 100) ? "0" + milliseconds : milliseconds; milliseconds = (parseInt(milliseconds) < 10) ? "0" + milliseconds : milliseconds; if (hours>1) {return hours + ":" + minutes + ":" + seconds + "." + milliseconds;} else {return minutes + ":" + seconds + "." + milliseconds;} };
+  h1= title
+  p Results from heat #{heatNr} 
+  table
+    thead
+      tr
+        th Name
+        th Laps
+        th Total Time
+        th Best Lap
+
+    tbody
+      - each item in items
+        tr
+          - var time = msToTime(item.totalTime)
+          - var besttime = msToTime(item.bestLap)
+          td= item.name
+          td= item.laps
+          td= time
+          td= besttime

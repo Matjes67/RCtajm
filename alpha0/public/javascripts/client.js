@@ -156,7 +156,7 @@ var buttonGetLaps = function(indata) {
 
 					// best lap
 					var td = document.createElement("td");
-					td.textContent = data[x].lastLapTime;
+					td.textContent = msToTimeNoHour( data[x].bestLap );
 					tr.appendChild(td);
 
 					// avg lap

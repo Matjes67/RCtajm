@@ -81,7 +81,7 @@ console.log("adminpage");
 					tr.appendChild(td);
 					//button
 					var span = document.createElement('span');
-					span.innerHTML = '<input type=button value="Add number" onclick="buttonAddNumber(\''+data[x]._id+'\')" />';
+					span.innerHTML = '<input type=button value="+" onclick="buttonAddNumber(\''+data[x]._id+'\')" />';
 
 					td.appendChild(span);
 					tr.appendChild(td);
