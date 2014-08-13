@@ -490,7 +490,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             globalRaceNr = parseInt(indata);
 
             colLaps = db.collection("laptimes"+globalRaceNr);
-            colDrivers = db.collection("drivers"+globalRaceNr);
+            colDrivers = db.collection("drivers");
             colRace = db.collection("currentrace"+globalRaceNr);
             colAdmHeat = db.collection("heats"+globalRaceNr);
             // Load databases
@@ -561,6 +561,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             colLaps = db.collection("laptimes"+globalRaceNr+"x"+globalHeatNr);
             colDrivers = db.collection("drivers"+globalRaceNr);
             colRace = db.collection("currentrace"+globalRaceNr+"x"+globalHeatNr);
+
             colAdmHeat = db.collection("heats"+globalRaceNr);
             // Load databases
 
