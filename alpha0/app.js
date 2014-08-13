@@ -50,7 +50,9 @@ app.set('view engine', 'jade');                         // Express template
 app.use(favicon(__dirname + '/public/images/favicon.ico')); // Express template
 app.use(logger('dev'));                                 // Express template
 app.use(bodyParser.json());                             // Express template
-app.use(bodyParser.urlencoded());                       // Express template
+app.use(bodyParser.urlencoded({
+  extended: true
+}));                       // Express template
 app.use(cookieParser());                                // Express template
 app.use(express.static(path.join(__dirname, 'public'))); // Express template
 
@@ -96,9 +98,9 @@ module.exports = app;                                   // Express template
 
 // Manage what race data to get
 var globalRaceNr = 0;
-var globalFirstTime = 1;  // tells if the first car have past the timing loop at begining of race, official time start when first car pass on race start. 
+var globalFirstTime = true;  // tells if the first car have past the timing loop at begining of race, official time start when first car pass on race start. 
 var globalHeatNr = 0;
-
+var globalStartTime = 0;  // remove startTime from all times when counting laps
 
 
 function decodeAMB(indata,db,cb) {
@@ -117,6 +119,11 @@ function inputDataToDB(indata,db, cb) {
     var name2 =  indata.transponder;
     var BestLap = 99999999999;
 
+    if (globalFirstTime) {
+        globalStartTime = indata.time;
+        globalFirstTime = false;
+    }
+    indata.time = indata.time - globalStartTime;
     colDrivers.findOne({ transponders: indata.transponder}, function(err, document, name2) {
         if (err) throw err;
         if (document !== null) {
@@ -259,67 +266,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                     
                     if (splitData.length>4) {
                         inputDataToDB({transponder: splitData[1], time: splitData[2], strength: splitData[3], hits: splitData[4]},db, function(){});
-                        /*//var colDrivers = db.collection("drivers");
-                        var name2 =  splitData[1];
-                        colDrivers.findOne({ transponders: splitData[1]}, function(err, document, name2) {
-                            if (err) throw err;
-                            if (document !== null) {
-                                name2 = document.name;
-                            } else {
-                                name2 = splitData[1];
-                            }
-                            //var colLaps = db.collection("laptimes");
-                            colLaps.find({ name: name2 }, {'limit':1, 'sort':[[ 'lapTime', 'desc']]}).toArray(function(err, docs) {            
-                                var lap;
-                                if (docs.length>0) {
-                                    
-                                    var lap = (splitData[2] - docs[0].lapTime);
-                                    var totallaps = docs[0].laps+1;
-                                    debug(splitData[1]+"Returned #" + docs[0].lapTime + " serial: "+splitData[2]+" sum:" + lap);  
-                                    
-                                } else {
-                                    lap = "first lap";
-    				                totallaps = 0;
-                                }
-                                client.emit("laptime", {
-                                        name: name2,
-                                        laptime: lap,
-                                        transponder: splitData[1],
-                                        strength: splitData[3],
-                                        hits: splitData[4],
-                                        laps: totallaps
-                                });
-                                colLaps.insert({name: name2, 
-                                             transponder: splitData[1],
-                                                 lapTime: parseInt(splitData[2]), 
-                                                strength: parseInt(splitData[3]), 
-                                                    hits: parseInt(splitData[4]),
-                                                    laps: totallaps }, 
-                                    function(err,result) {
-                                        if (err) throw err;
-                                        receivedData = receivedData.replace(splitData2,"");
-                                    }
-                                );
-                                debug("race insert:"+name2+splitData[0]+":"+splitData[1]+":"+splitData[2]+":");
-                                colRace.update({name: name2}, {  name: name2, totalTime:parseInt(splitData[2]), laps: parseInt(totallaps), lastLapTime: lap },{upsert: true},
-                                    function(err,result) {
-                                        if (err) throw err;
-                                    }
-
-                                );
-                                colRace.find({}).sort({laps: -1, totalTime: 1}).toArray(function(err,res) {
-                                        if (err) throw err;
-                                        client.emit("cartable", res);
-                                    }
-
-                                );
-                                
-                                colDrivers.find({}).toArray (function(err,res) {
-                                });
-                            });
-                                
-                        });
-                        */
+                        
                         
                     }
                     
@@ -397,6 +344,8 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         socket.on("racecommand", function(data) {
             console.log(data);
             if (data == "start"){
+                // set globalFirstTime true
+                globalFirstTime = true;
                 serialPort.write("Start");
                 
 
@@ -408,10 +357,16 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                       console.log('exec error: ' + error);
                     }
                 });
+                colAdmHeat.update({nr: globalHeatNr}, { $set: {status: "Started"} },{upsert: false}, function(err,result) {
+                    if (err) throw err;
+                });
 
             }
             if (data == "stop"){
                 serialPort.write("Quit");
+                colAdmHeat.update({nr: globalHeatNr}, { $set: {status: "Stopped"} },{upsert: false}, function(err,result) {
+                    if (err) throw err;
+                });
             }
             if (data == "clear"){
                 //var colRace = db.collection("currentrace");
@@ -536,7 +491,8 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                 colAdmHeat.insert({heatName: heatName, 
                              createDate: jsonDate,
                                      nr: parseInt(nr),
-                                 status: "pending" }, 
+                                 status: "pending", 
+                                raceDay: globalRaceNr}, 
                 function(err,result) {
                     if (err) throw err;
                     debug(result);
@@ -559,7 +515,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             globalHeatNr = parseInt(indata);
 
             colLaps = db.collection("laptimes"+globalRaceNr+"x"+globalHeatNr);
-            colDrivers = db.collection("drivers"+globalRaceNr);
+            colDrivers = db.collection("drivers");
             colRace = db.collection("currentrace"+globalRaceNr+"x"+globalHeatNr);
 
             colAdmHeat = db.collection("heats"+globalRaceNr);

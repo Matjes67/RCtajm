@@ -177,7 +177,7 @@ if (socket !== undefined) {
 				//button show results
 				var td = document.createElement("td");
 				var span = document.createElement('span');
-				span.innerHTML = '<input type=button value="Show Results" onclick="buttonLoadResult(\''+data[x].nr+'\')" />';
+				span.innerHTML = '<input type=button value="Show Results" onclick="window.open(\'/results/'+data[x].raceDay+'/'+data[x].nr+'\',\'_blank\',\'resizable=yes\')" />';
 
 				td.appendChild(span);
 				tr.appendChild(td);

@@ -1,6 +1,6 @@
 meSpeak.loadConfig("/javascripts/mespeak_config.json");
 meSpeak.loadVoice('/javascripts/voices/en/en-us.json');
-meSpeak.speak('hello world');
+//meSpeak.speak('hello world');
 
 console.log("hello world");
 
@@ -165,7 +165,7 @@ var buttonGetLaps = function(indata) {
 
 					// avg lap
 					var td = document.createElement("td");
-					td.textContent = msToTimeNoHour(data[x].totalTime/data[x].laps);
+					td.textContent = msToTimeNoHour( data[x].totalTime / (data[x].laps) );
 					tr.appendChild(td);
 					
 					//button
