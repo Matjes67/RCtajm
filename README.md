@@ -19,7 +19,7 @@ Download and install arch linux to a sd card. follow guide on raspberrys homepag
 
 * pacman -Suy
 * reboot
-* pacman -S nodejs git python2 mongodb base-devel iw mpg123 hostapd dnsmasqd
+* pacman -S nodejs git python2 mongodb base-devel iw mpg123 hostapd dnsmasq
 * node -v
 * npm -v
 * systemctl enable mongodb
@@ -30,6 +30,8 @@ Download and install arch linux to a sd card. follow guide on raspberrys homepag
 * ln -s /usr/bin/python2 /usr/bin/python
 * npm install
 * DEBUG=alpha0 ./bin/www
+
+Before running npm install make sure your time setting on the pi is correct, it will fail if its to far back in time. 
 
 
 Installing Wifi AP mode

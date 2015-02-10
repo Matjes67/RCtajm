@@ -16,14 +16,22 @@ var argv = require('minimist')(process.argv.slice(2)); // hande input arguments
 console.log(argv);
 
 var portName = argv.p; 
+var AMB = 1;
+var MINIZ = 2;
+var ARDUINO = 3;
 
 if ( argv.d == "amb") {
-    var AMB = true;    
+    var decoderType = AMB;    
+} else if ( argv.d == "miniz") {
+    var decoderType = MINIZ;    
+} else if ( argv.d == "arduino") {
+    var decoderType = ARDUINO;    
 }
 else {
-    var AMB = false;
+    var decoderType = 0;
+    console.log("No decoder specified, will only print incomming serial traffic. Use -d to set decoder type.")
 }
-debug(AMB);
+debug(decoderType);
 
 var io = require('socket.io');
 //var spawn = require('child_process').spawn;
@@ -35,7 +43,7 @@ mongo = require('mongodb'),
 server = require('http').createServer(app).listen(8080),
 client = io.listen(server);
 
-//debug('Express server listening on port ' + server.address().port);
+debug('Express server listening on port ' + server.address().port);
 
 var SerialPort = require("serialport").SerialPort;
 var sendData = "";
@@ -237,7 +245,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
         serialPort.on('data', function(data) {
             receivedData += data.toString();
             
-            if (AMB) {
+            if (decoderType == AMB) {
                 if (receivedData.substring(receivedData.indexOf('@')).indexOf('\n') >= 0 && receivedData.indexOf('@') >= 0) {
                     var result = receivedData.substring(receivedData.indexOf('@'));
                     receivedData = receivedData.substring(receivedData.indexOf('@'));
@@ -249,7 +257,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
 
                     inputDataToDB({transponder: result[3], time: time, strength: result[5], hits: result[6]},db, function(){});
                 }
-            } else {
+            } else if (decoderType == ARDUINO) {
                 if (receivedData[0] !== 'C' && receivedData.length>2 && receivedData.indexOf('C') >= 0) {
                     debug("FIRST NOT START CHAR");
                     receivedData = receivedData.substring(receivedData.indexOf('C'));
@@ -271,6 +279,9 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                     }
                     
                 }
+            } else {
+                debug(receivedData);
+
             }
          // send the incoming data to browser with websockets.
        //socketServer.emit('update', sendData);
