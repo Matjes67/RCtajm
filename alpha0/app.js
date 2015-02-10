@@ -43,7 +43,7 @@ mongo = require('mongodb'),
 server = require('http').createServer(app).listen(8080),
 client = io.listen(server);
 
-debug('Express server listening on port ' + server.address().port);
+//debug('Express server listening on port ' + server.address().port);
 
 var SerialPort = require("serialport").SerialPort;
 var sendData = "";
@@ -230,14 +230,35 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
 
     console.log("Opening serial device on "+portName);
     var receivedData = "";
-    serialPort = new SerialPort(portName, {
-        baudrate: 9600,
-        // defaults for Arduino serial communication
-        dataBits: 8,
-        parity: 'none',
-        stopBits: 1,
-        flowControl: false
-    });
+    if (decoderType == AMB) {
+        serialPort = new SerialPort(portName, {
+            baudrate: 9600,
+            // defaults for Arduino serial communication
+            dataBits: 8,
+            parity: 'none',
+            stopBits: 1,
+            flowControl: false
+        });
+    } else if (decoderType == ARDUINO) {
+        serialPort = new SerialPort(portName, {
+            baudrate: 9600,
+            // defaults for Arduino serial communication
+            dataBits: 8,
+            parity: 'none',
+            stopBits: 1,
+            flowControl: false
+        });
+    } else {
+        serialPort = new SerialPort(portName, {
+            baudrate: 9600,
+            // defaults for Arduino serial communication
+            dataBits: 8,
+            parity: 'none',
+            stopBits: 1,
+            flowControl: false
+        });
+    }
+
  
     serialPort.on("open", function () {
       console.log('serial communication is open');
@@ -281,6 +302,7 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                 }
             } else {
                 debug(receivedData);
+                receivedData = "";
 
             }
          // send the incoming data to browser with websockets.
