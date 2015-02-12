@@ -248,7 +248,15 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
             stopBits: 1,
             flowControl: false
         });
-    } else {
+    } else if (decoderType == MINIZ) {
+        serialPort = new SerialPort(portName, {
+            baudrate: 19200,
+            dataBits: 8,
+            parity: 'none',
+            stopBits: 1,
+            flowControl: false
+        });
+    }else {
         serialPort = new SerialPort(portName, {
             baudrate: 9600,
             // defaults for Arduino serial communication
@@ -300,7 +308,33 @@ mongo.connect("mongodb://localhost/rctajm", function(err,db) {
                     }
                     
                 }
-            } else {
+            } else if (decoderType == MINIZ) { 
+		if (receivedData.substring(receivedData.indexOf('#')).indexOf('$') >= 0 && receivedData.indexOf('#') >= 0) {
+			if ( receivedData.indexOf('U') == 1 ) {
+				debug("Utime"+receivedData);
+				debug("uindex "+receivedData.indexOf('U'));
+				receivedData = ""+receivedData.substring(9);
+			} 
+                        if ( receivedData.indexOf('P') == 1 ) {
+                                debug("Pcar"+receivedData);
+				var t2 = receivedData.substring(receivedData.indexOf('P')+1,receivedData.indexOf('P')+3);
+debug("t2"+t2);
+				var t3 = receivedData.substring(receivedData.indexOf('P')+3,receivedData.indexOf('P')+11);
+				var carID = parseInt(t2,16);
+				var carTime = parseInt(t3,16);
+				debug("CarID"+carID+"CarTime"+carTime);
+ debug("Pindex "+receivedData.indexOf('P'));
+				inputDataToDB({transponder: carID, time: carTime, strength: 1, hits: 1},db, function(){});
+				receivedData = ""+receivedData.substring(11);
+                        } if ( ( receivedData.indexOf('U') != 1 ) && ( receivedData.indexOf('P') != 1 ) ){
+				debug("strange beginning, cutting 1 char. "+receivedData);
+				receivedData = receivedData.substring(1);
+			}
+			//debug(receivedData);
+                	//receivedData = "";
+                }
+            }
+            else {
                 debug(receivedData);
                 receivedData = "";
 
