@@ -21,6 +21,9 @@ import json
 netLog.speedLog("import klart sys")
 #Egna saker
 import drivers
+import editdrivers
+import editdriver
+import lapinfo
 
 netLog.speedLog("import klart eget")
 #netLog.speedLog("started")
@@ -50,6 +53,7 @@ class RcTajm(QMainWindow):
         self.drivers = drivers.Drivers()
 
         self.timeList = []
+        self.minLapTime = 5.0
 
 
 
@@ -57,7 +61,7 @@ class RcTajm(QMainWindow):
         self.timer1 = QTimer()
         self.timer1.timeout.connect(self.redraw)
         self.timer1.start(redrawMs)
-        self.onUpdateButton()
+        #self.onUpdateButton()
         self.decThread.start()
         self.createModel()
 
@@ -79,15 +83,13 @@ class RcTajm(QMainWindow):
         self.ui.statusbar.hide()
 
 
-        #self.ui.pushButton.clicked.connect(self.onUpdateButton)
-
+        self.ui.buttonEditDrivers.clicked.connect(self.onButtonEditDrivers)
+        
+        self.ui.tableView.clicked.connect(self.onSingleClick)
         #self.ui.portIn.setText(str(self.settings["portIn"]) )
 
     def createModel(self):
-        #tagFilter = self.ui.tagSearch.text()
-        #descFilter = self.ui.descSearch.text()
-        #systemFilter = self.ui.comboBoxSystem.currentText()
-        #categoryFilter = str(self.ui.comboBoxCategory.currentText())
+
         self.model = QStandardItemModel()
 
         counter = 0
@@ -99,45 +101,53 @@ class RcTajm(QMainWindow):
         counter+=1
         self.model.setHorizontalHeaderItem( counter, QStandardItem( "Laps" ) )
         counter+=1
+        self.model.setHorizontalHeaderItem( counter, QStandardItem( "LastLap" ) )
+        counter+=1
+        self.model.setHorizontalHeaderItem( counter, QStandardItem( "BestLap" ) )
+        counter+=1
         self.model.setHorizontalHeaderItem( counter, QStandardItem( "Hits" ) )
         counter+=1
         self.model.setHorizontalHeaderItem( counter, QStandardItem( "Strength" ) )
 
 
         for ff in self.timeList:
-            #tag, desc = ff
-            #if (tagFilter.lower() in ff["Identity"].lower() and descFilter.lower() in ff["Description"].lower()):
-                #if (systemFilter in ff["System"]):
-                    #print(ff["Group"])
 
-                    driver = ff["driver"]
-                    coldriver = QStandardItem(driver)
-                    coldriver.setData( driver,  Qt.UserRole + 1)
-                    coldriver.setEditable(False)
+            driver = ff["driver"]
+            coldriver = QStandardItem(driver)
+            coldriver.setData( driver,  Qt.UserRole + 1)
+            coldriver.setEditable(False)
 
-                    coltran = QStandardItem( ff["transponder"] )
-                    coltran.setData( ff["transponder"],  Qt.UserRole + 1)
-                    coltran.setEditable(False)
+            coltran = QStandardItem( ff["transponder"] )
+            coltran.setData( driver,  Qt.UserRole + 1)
+            coltran.setEditable(False)
 
-                    coltime = QStandardItem( f"{ff['time']:.4}" )
-                    coltime.setData( ff["time"],  Qt.UserRole + 1)
-                    coltime.setEditable(False)
+            coltime = QStandardItem( f"{ff['time']:.4}" )
+            coltime.setData( driver,  Qt.UserRole + 1)
+            coltime.setEditable(False)
 
-                    collaps = QStandardItem( str(ff["laps"]) )
-                    collaps.setData( ff["laps"],  Qt.UserRole + 1)
-                    collaps.setEditable(False)
+            collaps = QStandardItem( str(ff["laps"]) )
+            collaps.setData( driver,  Qt.UserRole + 1)
+            collaps.setEditable(False)
 
-                    colhits = QStandardItem( str(ff["hits"]) )
-                    colhits.setData( ff["time"],  Qt.UserRole + 1)
-                    colhits.setEditable(False)
+            collast = QStandardItem( f"{ff['lapTime']:.4}" )
+            collast.setData( driver,  Qt.UserRole + 1)
+            collast.setEditable(False)
+            
+            colbest = QStandardItem( f"{ff['bestLap']:.4}" )
+            colbest.setData( driver,  Qt.UserRole + 1)
+            colbest.setEditable(False)
 
-                    colstre = QStandardItem( str(ff["strength"]) )
-                    colstre.setData( ff["strength"],  Qt.UserRole + 1)
-                    colstre.setEditable(False)
+            colhits = QStandardItem( str(ff["hits"]) )
+            colhits.setData( driver,  Qt.UserRole + 1)
+            colhits.setEditable(False)
 
-                    rowlist = [ coldriver, coltran, coltime, collaps, colhits, colstre ]
+            colstre = QStandardItem( str(ff["strength"]) )
+            colstre.setData( driver,  Qt.UserRole + 1)
+            colstre.setEditable(False)
 
-                    self.model.appendRow( rowlist )
+            rowlist = [ coldriver, coltran, coltime, collaps, collast, colbest, colhits, colstre ]
+
+            self.model.appendRow( rowlist )
 
 
 
@@ -186,13 +196,24 @@ class RcTajm(QMainWindow):
         with open(self.settingsfilename, 'w') as outfile:
             json.dump(self.settings, outfile, indent=3, sort_keys=True)
 
-    def onUpdateButton(self):
+    def onButtonEditDrivers(self):
+        dialog = editdrivers.EditDrivers(self)
+        dialog.show()
         #portIn = int(self.ui.portIn.text())
         #self.settings["portIn"] = portIn
         #print("update ", portIn)
 
         #self.decThread.updateValues(portIn, ulist)
-        self.saveSettings()
+        #self.saveSettings()
+
+    def timeBest(self, list):
+        min = 999999999.9999
+        
+        for lap in list:
+            if lap["lapTime"] < min:
+                if lap["lapTime"] > self.minLapTime:
+                    min = lap["lapTime"]
+        return min
 
     def parseTimeData(self, indata):
         print("parsetimedata", indata)
@@ -200,11 +221,20 @@ class RcTajm(QMainWindow):
         for times in self.timeList:
             if times["driver"] == driver:
                 times["transponder"] = indata["nr"]
-                times["time"] = float(indata["time"]) - float(times["oldtime"])
+                times["time"] = float(indata["time"])
+                times["lapTime"] = float(indata["time"]) - float(times["oldtime"])
                 times["oldtime"] = float(indata["time"])
                 times["strength"] = indata["strength"]
                 times["hits"] = indata["hits"]
                 times["laps"] += 1
+                lap = {}
+                lap["lap"] = times["laps"]
+                lap["transponder"] = times["transponder"]
+                lap["lapTime"] = times["lapTime"]
+                lap["strength"] = times["strength"]
+                lap["hits"] = times["hits"]
+                times["history"].append(lap)
+                times["bestLap"] = self.timeBest(times["history"])
                 return
         out = {}
         out["driver"] = driver
@@ -216,8 +246,19 @@ class RcTajm(QMainWindow):
         out["hits"] = indata["hits"]
 
         out["laps"] = 0
+        out["history"] = []
+        out["bestLap"] = 0.0
+        out["lapTime"] = 0.0
         self.timeList.append(out)
 
+    def onSingleClick(self, in1):
+        print("onSingleClick", in1.data())
+        #subprocess.Popen(["cmd.exe", "/k title ABana"], creationflags=subprocess.CREATE_NEW_CONSOLE)
+        name = in1.data( Qt.UserRole + 1)
+        dialog = lapinfo.LapInfo(self, name)
+        dialog.show()
+        
+        
 import threading
 import time
 
@@ -235,7 +276,7 @@ class DecThread(threading.Thread):
         self.outputList = []
         self.decoder = 0
         if (self.parent.settings["decoder"] == "ambserial"):
-            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"])
+            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"], 115200)
             print("decoder ambserial")
 
     def run(self):
