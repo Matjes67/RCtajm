@@ -30,7 +30,7 @@ void loop() {
   }
   if (cartime < millis()) {
     sendCar();
-    cartime = millis() + 5000 + random(5000);
+    cartime = millis() + 1000 + random(1000);
   }
   if(digitalRead(5)) {
     burst = 2000;

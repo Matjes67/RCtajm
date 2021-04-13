@@ -18,6 +18,7 @@ import json
 #Egna saker
 import drivers
 import adddriver
+from common import *
 
 
 class LapInfo(QDialog):
@@ -69,7 +70,7 @@ class LapInfo(QDialog):
                     coltran.setData( lapnr,  Qt.UserRole + 1)
                     coltran.setEditable(False)
 
-                    coltime = QStandardItem( f"{lap['lapTime']:.4}" )
+                    coltime = QStandardItem( timeFormat(lap['lapTime']) )
                     coltime.setData( lapnr,  Qt.UserRole + 1)
                     coltime.setEditable(False)
 

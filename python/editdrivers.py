@@ -18,14 +18,15 @@ import json
 #Egna saker
 import drivers
 import adddriver
-
+import editdriver
 
 class EditDrivers(QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent, root):
         super(EditDrivers, self).__init__(parent)
         self.parent = parent
         self.selectedName = ""
+        self.root = root
         self.initUI()
         
     def initUI(self):
@@ -74,7 +75,7 @@ class EditDrivers(QDialog):
         
     def onButtonEditDriver(self):
         if (self.selectedName != ""):
-            dialog = editdriver.EditDriver(self, self.selectedName)
+            dialog = editdriver.EditDriver(self,self.root, self.selectedName)
             dialog.show()
         return
         

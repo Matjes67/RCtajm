@@ -51,8 +51,23 @@ class Drivers():
         driver["transponders"] = transponders
         self.settings["drivers"].append(driver)
         return
-    def addTransponder(self, name, transponders):
-        
+    
+    def updateDriver(self, name, transponders, newname=""):
+        if (newname == ""):
+            for driver in self.settings["drivers"]:
+                if ("name" in driver):
+                    if (driver["name"] == name):
+                        driver["transponders"] = transponders
+        else:
+            if (not self.nameExists(newname)):
+                driver = {}
+                driver["name"] = newname
+                driver["transponders"] = transponders
+                self.settings["drivers"].append(driver)
+                for driver in self.settings["drivers"]:
+                    if ("name" in driver):
+                        if (driver["name"] == name):
+                            self.settings["drivers"].remove(driver)
         return
 
     def getDriver(self, nr):

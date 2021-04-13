@@ -25,6 +25,8 @@ import editdrivers
 import editdriver
 import lapinfo
 
+from common import *
+
 netLog.speedLog("import klart eget")
 #netLog.speedLog("started")
 
@@ -121,7 +123,7 @@ class RcTajm(QMainWindow):
             coltran.setData( driver,  Qt.UserRole + 1)
             coltran.setEditable(False)
 
-            coltime = QStandardItem( f"{ff['time']:.4}" )
+            coltime = QStandardItem( timeFormat(ff['time']) )
             coltime.setData( driver,  Qt.UserRole + 1)
             coltime.setEditable(False)
 
@@ -129,11 +131,11 @@ class RcTajm(QMainWindow):
             collaps.setData( driver,  Qt.UserRole + 1)
             collaps.setEditable(False)
 
-            collast = QStandardItem( f"{ff['lapTime']:.4}" )
+            collast = QStandardItem( timeFormat(ff['lapTime']) )
             collast.setData( driver,  Qt.UserRole + 1)
             collast.setEditable(False)
             
-            colbest = QStandardItem( f"{ff['bestLap']:.4}" )
+            colbest = QStandardItem( timeFormat(ff['bestLap']) ) 
             colbest.setData( driver,  Qt.UserRole + 1)
             colbest.setEditable(False)
 
@@ -197,8 +199,9 @@ class RcTajm(QMainWindow):
             json.dump(self.settings, outfile, indent=3, sort_keys=True)
 
     def onButtonEditDrivers(self):
-        dialog = editdrivers.EditDrivers(self)
+        dialog = editdrivers.EditDrivers(self, self)
         dialog.show()
+        print("editdone")
         #portIn = int(self.ui.portIn.text())
         #self.settings["portIn"] = portIn
         #print("update ", portIn)
@@ -216,7 +219,7 @@ class RcTajm(QMainWindow):
         return min
 
     def parseTimeData(self, indata):
-        print("parsetimedata", indata)
+        #print("parsetimedata", indata)
         driver = self.drivers.getDriver(indata["nr"])
         for times in self.timeList:
             if times["driver"] == driver:
