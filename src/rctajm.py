@@ -10,12 +10,21 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import  *
+from PyQt5.QtTextToSpeech import QTextToSpeech
 netLog.speedLog("import klart qt")
 
 import socket
 from pathlib import Path
 import traceback
 import json
+import time
+
+import serial.tools.list_ports
+ports = serial.tools.list_ports.comports()
+
+for port, desc, hwid in sorted(ports):
+    print("{}: {} [{}]".format(port, desc, hwid))
+
 #from pathlib import Path
 #from functools import partial
 netLog.speedLog("import klart sys")
@@ -24,6 +33,7 @@ import drivers
 import editdrivers
 import editdriver
 import lapinfo
+import race
 
 from common import *
 
@@ -34,7 +44,14 @@ SRC_PATH = os.path.dirname(os.path.abspath(__file__))
 
 NR_OUTPUTS = 8
 
-import time
+
+
+
+# test = QTextToSpeech()
+# #print(test.availableVoices() )
+# test.setVolume(1.0)
+# test.setRate(0.005)
+# test.say("Hello one tow three")
 
 def current_milli_time():
     return round(time.time() * 1000)
@@ -53,6 +70,8 @@ class RcTajm(QMainWindow):
 
         self.decThread = DecThread(self)
         self.drivers = drivers.Drivers()
+        
+        self.race = race.Race(self)
 
         self.timeList = []
         self.minLapTime = 5.0
@@ -85,10 +104,16 @@ class RcTajm(QMainWindow):
         self.ui.statusbar.hide()
 
 
-        self.ui.buttonEditDrivers.clicked.connect(self.onButtonEditDrivers)
+        self.ui.actionDrivers.triggered.connect(self.onButtonEditDrivers)
+        self.ui.actionRace.triggered.connect(self.onButtonEditRace)
+        
+        self.ui.buttonStart.clicked.connect(self.onButtonStart)
+        self.ui.buttonStop.clicked.connect(self.onSingleClick)
         
         self.ui.tableView.clicked.connect(self.onSingleClick)
         #self.ui.portIn.setText(str(self.settings["portIn"]) )
+        
+        
 
     def createModel(self):
 
@@ -191,6 +216,7 @@ class RcTajm(QMainWindow):
         self.packets = self.decThread.counter
         self.ui.labelPackets.setText(""+str(self.packets))
         #self.ui.labelRate.setText(""+str(rate)+"/s")
+        self.ui.labelTime.setText(timeFormat(self.race.getRaceTime() ) )
 
         self.createModel()
 
@@ -209,6 +235,12 @@ class RcTajm(QMainWindow):
         #self.decThread.updateValues(portIn, ulist)
         #self.saveSettings()
 
+    def onButtonEditRace(self):
+        return
+        
+    def onButtonStart(self):
+        self.race.startRace()
+        
     def timeBest(self, list):
         min = 999999999.9999
         
