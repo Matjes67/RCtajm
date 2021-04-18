@@ -1,7 +1,7 @@
 RCtajm
 ======
 
-RC Tajm (pronounced rc time, almost)
+RC Tajm (pronounced rc time, almost) The simple lap time software. 
 
 Work in progress, not much is working at the moment.
 
