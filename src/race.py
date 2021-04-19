@@ -11,6 +11,7 @@ class Race():
         
         self.startTime = 0
         self.raceTime = QElapsedTimer()
+        self.raceTime.start()
         
     def setRaceTime(self, input):
         # set race time in seconds

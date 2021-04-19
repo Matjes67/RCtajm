@@ -34,6 +34,7 @@ import editdrivers
 import editdriver
 import lapinfo
 import race
+import report
 
 from common import *
 
@@ -219,6 +220,8 @@ class RcTajm(QMainWindow):
         self.ui.labelTime.setText(timeFormat(self.race.getRaceTime() ) )
 
         self.createModel()
+        rep = report.Report(self)
+        rep.createHTML()
 
     def saveSettings(self):
         with open(self.settingsfilename, 'w') as outfile:
