@@ -86,7 +86,7 @@ class RcTajm(QMainWindow):
 
 
         self.ui.buttonEditDrivers.clicked.connect(self.onButtonEditDrivers)
-        
+
         self.ui.tableView.clicked.connect(self.onSingleClick)
         #self.ui.portIn.setText(str(self.settings["portIn"]) )
 
@@ -134,8 +134,8 @@ class RcTajm(QMainWindow):
             collast = QStandardItem( timeFormat(ff['lapTime']) )
             collast.setData( driver,  Qt.UserRole + 1)
             collast.setEditable(False)
-            
-            colbest = QStandardItem( timeFormat(ff['bestLap']) ) 
+
+            colbest = QStandardItem( timeFormat(ff['bestLap']) )
             colbest.setData( driver,  Qt.UserRole + 1)
             colbest.setEditable(False)
 
@@ -211,7 +211,7 @@ class RcTajm(QMainWindow):
 
     def timeBest(self, list):
         min = 999999999.9999
-        
+
         for lap in list:
             if lap["lapTime"] < min:
                 if lap["lapTime"] > self.minLapTime:
@@ -260,8 +260,8 @@ class RcTajm(QMainWindow):
         name = in1.data( Qt.UserRole + 1)
         dialog = lapinfo.LapInfo(self, name)
         dialog.show()
-        
-        
+
+
 import threading
 import time
 
@@ -279,7 +279,7 @@ class DecThread(threading.Thread):
         self.outputList = []
         self.decoder = 0
         if (self.parent.settings["decoder"] == "ambserial"):
-            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"], 115200)
+            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"], 9600)
             print("decoder ambserial")
 
     def run(self):
@@ -293,11 +293,12 @@ class DecThread(threading.Thread):
                 self.update = False
 
             res = self.decoder.checkData()
-            if ("status" in res):
-                if (res["status"] == "ping" or res["status"] == "time"):
-                    self.counter = self.counter+1
-                if res["status"] == "time":
-                    self.parent.parseTimeData(res)
+            if res:
+                if ("status" in res):
+                    if (res["status"] == "ping" or res["status"] == "time"):
+                        self.counter = self.counter+1
+                    if res["status"] == "time":
+                        self.parent.parseTimeData(res)
             time.sleep(0.001)
 
 
