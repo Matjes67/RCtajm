@@ -13,7 +13,14 @@ class AmbSerial():
             print("Connecting serial device: ", self.port, self.baud)
             self.dec = serial.Serial(self.port,self.baud,timeout=5)
             time.sleep(1)
-            self.dec.write(b"AMBRC MODE\n")
+            self.dec.write(b"AMBRC MODE\r\n")
+
+            self.dec.write(b"?;192;0;37;0;\r\n")
+            time.sleep(1)
+
+            self.dec.write(b"?;192;0;37;0;\r\n")
+
+            self.dec.write(b"?;192;0;37;0;\r\n")
             self.connected = True
         except:
             self.connected = False
@@ -33,14 +40,15 @@ class AmbSerial():
                     #print(data)
                     data = data.split("\t")
                     netLog.LOG_INFO(data)
-                    out = {}
-                    out["status"] = "time"
-                    out["nr"] = data[3]
-                    out["time"] = data[4]
-                    out["strength"] = data[5]
-                    out["hits"] = data[6]
-                    netLog.LOG_INFO(out)
-                    return out
+                    if (len(data) > 7):
+                        out = {}
+                        out["status"] = "time"
+                        out["nr"] = data[3]
+                        out["time"] = data[4]
+                        out["strength"] = data[5]
+                        out["hits"] = data[6]
+                        netLog.LOG_INFO(out)
+                        return out
                 if "#" in data:
                     netLog.LOG_INFO(data)
                     out = {}

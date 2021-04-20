@@ -314,7 +314,7 @@ class DecThread(threading.Thread):
         self.outputList = []
         self.decoder = 0
         if (self.parent.settings["decoder"] == "ambserial"):
-            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"], 115200)
+            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"], 9600)
             print("decoder ambserial")
 
     def run(self):
@@ -328,11 +328,12 @@ class DecThread(threading.Thread):
                 self.update = False
 
             res = self.decoder.checkData()
-            if ("status" in res):
-                if (res["status"] == "ping" or res["status"] == "time"):
-                    self.counter = self.counter+1
-                if res["status"] == "time":
-                    self.parent.parseTimeData(res)
+            if res:
+                if ("status" in res):
+                    if (res["status"] == "ping" or res["status"] == "time"):
+                        self.counter = self.counter+1
+                    if res["status"] == "time":
+                        self.parent.parseTimeData(res)
             time.sleep(0.001)
 
 
