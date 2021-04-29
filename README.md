@@ -29,3 +29,9 @@ Modular design on hardware classes makes it easy to write support for new hardwa
 Currently supported hardware:
 * Hourglass home made decoder
 * AMB Rc2 or similar with serial interface
+
+
+Install on Debian
+=================
+
+apt install git python3-pyqt5

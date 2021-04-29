@@ -10,7 +10,7 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import  *
-from PyQt5.QtTextToSpeech import QTextToSpeech
+#from PyQt5.QtTextToSpeech import QTextToSpeech
 netLog.speedLog("import klart qt")
 
 import socket
@@ -314,7 +314,7 @@ class DecThread(threading.Thread):
         self.outputList = []
         self.decoder = 0
         if (self.parent.settings["decoder"] == "ambserial"):
-            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"], 9600)
+            self.decoder = decoder_ambserial.AmbSerial(self.parent.settings["port"], 115200)
             print("decoder ambserial")
 
     def run(self):

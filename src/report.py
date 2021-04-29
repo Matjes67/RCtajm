@@ -53,7 +53,8 @@ class Report():
                     for ff in self.parent.timeList:
                         #print(ff)
                         with tr(): #Row 1
-                            td(ff["driver"])
+                            #td(ff["driver"])
+                            td( a(ff["driver"], href='./drivers/'+ff["driver"]+".html") )
                             td(ff["transponder"])
                             td( timeFormat(ff['time']) )
                             td(ff["laps"])
@@ -68,4 +69,39 @@ class Report():
         f = open("../html/index.html", "w")
         f.write(doc.render())
         f.close()
+        
+        for driver in self.parent.drivers.getListOfDrivers():
+            doc = dominate.document(title='RC Tajm')
+
+            with doc:
+                with div():
+                    attr(cls='body')
+                    h1('Practice times '+driver)
+            
+            with doc: 
+                style("table{border-collapse:collapse}")
+                style("th{font-size:small;border:1px solid gray;padding:4px;background-color:#DDD}")
+                style("td{font-size:small;text-align:center;border:1px solid gray;padding:4px}")
+                           
+                with table():
+                    with thead():
+                        th("Lap")
+                        th("transponder")
+                        th("Time")
+                        th("Hits")
+                        th("Strength")
+                    with tbody():
+                        for times in self.parent.timeList:
+                            if times["driver"] == driver:
+                                for ff in times["history"]:
+                                    with tr(): 
+                                        td(ff["lap"])
+                                        td(ff["transponder"])
+                                        td( timeFormat(ff['lapTime']) )
+                                        td(ff["hits"])
+                                        td(ff["strength"])
+
+            f = open("../html/drivers/"+driver+".html", "w")
+            f.write(doc.render())
+            f.close()
         

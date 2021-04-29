@@ -70,6 +70,15 @@ class Drivers():
                             self.settings["drivers"].remove(driver)
         return
 
+    def getListOfDrivers(self):
+        drivers = []
+        for driver in self.settings["drivers"]:
+            
+            if ("name" in driver):
+                drivers.append(driver["name"])
+                
+        return drivers
+
     def getDriver(self, nr):
         nr = str(nr)
         #print("getDriver", nr)
