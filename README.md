@@ -34,4 +34,5 @@ Currently supported hardware:
 Install on Debian
 =================
 
-apt install git python3-pyqt5
+ apt install git python3-pyqt5 python3-pip python3-serial 
+ pip3 install dominate
