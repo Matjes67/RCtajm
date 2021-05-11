@@ -9,7 +9,7 @@ This project is multi platform and should work on linux on a normal computer x86
 
 Main focus is on creating a simple to use system that is working on all types of computers. This project will NOT be one with super complex databases to keep track of 500 drivers and sync online and all that crap that makes other timing softwares stupid hard to get running. 
 
-
+Discord server: https://discord.gg/vFYafPxy
 
 Design goals
 =======================
